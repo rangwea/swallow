@@ -2,14 +2,15 @@ package backend
 
 import (
 	"fmt"
+	"github.com/rangwea/swallows/backend/util"
 	"log"
 	"os"
 	"testing"
 )
 
 func before() {
-	AppHome = "/Users/feijianwu/.swallow/site"
-	if e, _ := PathExists(AppHome); !e {
+	AppHome = ""
+	if e, _ := util.PathExists(AppHome); !e {
 		if err := os.Mkdir(AppHome, os.ModePerm); err != nil {
 			log.Fatal("make app home dir fail", err)
 		}

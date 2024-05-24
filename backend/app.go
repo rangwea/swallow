@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"golang.org/x/exp/slog"
 	"os"
 	"os/user"
 	"path"
@@ -13,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/pkg/errors"
+	"github.com/rangwea/swallows/backend/util"
+
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	rt "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -48,9 +46,20 @@ func NewApp() *App {
 
 // Startup is called when the app starts. The context is saved
 func (a *App) Startup(ctx context.Context) {
+	a.ctx = ctx
+
+	defer func() {
+		if r := recover(); r != nil {
+			rt.MessageDialog(a.ctx, rt.MessageDialogOptions{
+				Type:    rt.ErrorDialog,
+				Message: fmt.Sprintf("app crashed:\n%s", r),
+			})
+			rt.Quit(a.ctx)
+		}
+	}()
+
 	// initialize
 	initialize()
-	a.ctx = ctx
 }
 
 func initialize() {
@@ -68,12 +77,12 @@ func initialize() {
 func initAppHome() {
 	u, err := user.Current()
 	if err != nil {
-		slog.Error("get user dir fail", err)
+		panic(err)
 	}
 	AppHome = path.Join(u.HomeDir, ".swallow")
-	if e, _ := PathExists(AppHome); !e {
+	if e, _ := util.PathExists(AppHome); !e {
 		if err = os.Mkdir(AppHome, os.ModePerm); err != nil {
-			slog.Error("make app home dir fail", err)
+			panic(fmt.Errorf("make app home dir fail", err))
 		}
 	}
 }
@@ -94,16 +103,22 @@ type R struct {
 	Data interface{} `json:"data"`
 }
 
+type AppConf struct {
+	ActivedDeploy ConfType `json:"activedDeploy"`
+}
+
+const confTypeApp ConfType = "app"
+
+const SiteImagePath = "/static/images"
+
 func (a *App) SitePreview() *R {
 	err := Hugo.Preview()
 	if err != nil {
-		slog.Error("preview fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
-	err = OpenBrowser("http://localhost:1313/")
+	err = util.OpenBrowser("http://localhost:1313/")
 	if err != nil {
-		slog.Error("preview fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 	return success(nil)
 }
@@ -111,96 +126,57 @@ func (a *App) SitePreview() *R {
 func (a *App) SiteDeploy() *R {
 	err := Hugo.Build()
 	if err != nil {
-		slog.Error("hugo generate error", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 
-	g, err := Conf.Read(GITHUB)
+	ac, err := getAppConf()
 	if err != nil {
-		slog.Error("get config fail", err)
-		return failM(err.Error())
+		return fail(errors.Wrap(err, "get app conf fail"))
 	}
-	if g == nil {
-		return failM("please set github config")
-	}
-	github := g.(Github)
-
-	_, err = git.PlainInit(Hugo.PublicDir, false)
-	if err != nil {
-		slog.Error("git init fail", err)
-		return failM(err.Error())
+	if ac == nil || ac.ActivedDeploy == "" {
+		return fail(errors.New("please set server config"))
 	}
 
-	r, err := git.PlainOpen(Hugo.PublicDir)
+	err = Deployers.Deploy(ac.ActivedDeploy, Hugo.PublicDir)
 	if err != nil {
-		slog.Error("open git repository error", err)
-		return failM(err.Error())
-	}
-	w, err := r.Worktree()
-	if err != nil {
-		slog.Error("open git worktree error", err)
-		return failM(err.Error())
-	}
-	_, err = w.Add(".")
-	if err != nil {
-		slog.Error("git add error", err)
-		return failM(err.Error())
-	}
-	_, err = w.Commit("deploy", &git.CommitOptions{
-		Author: &object.Signature{
-			Email: github.Email,
-			When:  time.Now(),
-		},
-	})
-	if err != nil {
-		slog.Error("git commit error", err)
-		return failM(err.Error())
-	}
-
-	_, err = r.CreateRemote(&config.RemoteConfig{
-		Name: "origin",
-		URLs: []string{github.Repository},
-	})
-	if err != nil {
-		slog.Error("git remote error", err)
-	}
-
-	err = r.Push(&git.PushOptions{
-		RemoteName: "origin",
-		Force:      true,
-		Auth: &http.BasicAuth{
-			Username: github.Username,
-			Password: github.Token,
-		},
-	})
-	if err != nil {
-		slog.Error("git push error", err)
-		return failM(err.Error())
+		return fail(errors.Wrap(err, "deploy fail"))
 	}
 
 	return success(nil)
 }
 
-func (a *App) ArticleList(search string) *R {
-	sql := "select * from t_article"
+func (a *App) ArticleList(search string, page int) *R {
+	where := ""
 	if search != "" {
-		sql += " where title like ? or tags like ?"
+		where += " where title like ? or tags like ?"
+		search = "%" + search + "%"
 	}
-	sql += " order by update_time desc"
-	search = "%" + search + "%"
-	r := []Article{}
-	err := DB.Select(&r, sql, search, search, search)
+
+	offset := page * 10
+	countSql := "select count(id) from t_article " + where
+	pageSql := "select * from t_article " + where + " order by update_time desc limit 10 offset " + strconv.Itoa(offset)
+
+	r := make(map[string]interface{})
+	count := 0
+	l := []Article{}
+	r["total"] = &count
+	r["list"] = &l
+
+	DB.Get(&count, countSql, search, search)
+
+	if count == 0 {
+		return success(r)
+	}
+
+	err := DB.Select(&l, pageSql, search, search)
 	if err != nil {
-		slog.Error("query article fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
-	slog.Debug("article list", "sql", sql, "result", r)
+
 	return success(r)
 }
 
 func (a *App) ArticleSave(aid string, meta Meta, content string) *R {
-	slog.Debug("article save", meta)
-
 	n := time.Now().Format("2006-01-02 15:04:05")
 	meta.Lastmod = n
 	if meta.Date == "" {
@@ -211,15 +187,13 @@ func (a *App) ArticleSave(aid string, meta Meta, content string) *R {
 		// common article need save db
 		err := saveArticleToDB(&aid, meta)
 		if err != nil {
-			slog.Error("save article into db fail", err)
-			return failM(err.Error())
+			return fail(err)
 		}
 	}
 
 	err := Hugo.WriteArticle(aid, meta, content)
 	if err != nil {
-		slog.Error("article write fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 
 	return success(aid)
@@ -228,8 +202,7 @@ func (a *App) ArticleSave(aid string, meta Meta, content string) *R {
 func (a *App) ArticleGet(aid string) *R {
 	meta, content, err := Hugo.ReadArticle(aid)
 	if err != nil {
-		slog.Error("get article fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 	data := map[string]interface{}{
 		"meta":    meta,
@@ -241,8 +214,7 @@ func (a *App) ArticleGet(aid string) *R {
 func (a *App) ArticleRemove(aids []string) *R {
 	_, err := DB.Exec(fmt.Sprintf("delete from t_article where id in(%s)", strings.Join(aids[:], ",")))
 	if err != nil {
-		slog.Error("delete article fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 	for _, aid := range aids {
 		Hugo.DeleteArticle(aid)
@@ -261,18 +233,16 @@ func (a *App) ArticleInsertImage(aid string) *R {
 		},
 	})
 	if err != nil {
-		slog.Error("select image fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 
-	imageDir := Hugo.getArticleImageDir(aid)
+	imageDir := Hugo.GetArticleImageDir(aid)
 	os.Mkdir(imageDir, os.ModePerm)
 
-	localPath, sitePath := Hugo.genArticleImagePath(aid)
-	err = CopyAsset(selection, localPath)
+	localPath, sitePath := Hugo.GenArticleImagePath(aid)
+	err = util.CopyFile(selection, localPath)
 	if err != nil {
-		slog.Error("copy image fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 
 	return success(sitePath)
@@ -281,20 +251,18 @@ func (a *App) ArticleInsertImage(aid string) *R {
 func (a *App) ArticleInsertImageBlob(aid int, blob string) *R {
 	var file []byte
 	if err := json.Unmarshal([]byte(blob), &file); err != nil {
-		slog.Error("parse file", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 
 	aida := strconv.Itoa(aid)
 
-	imageDir := Hugo.getArticleImageDir(aida)
+	imageDir := Hugo.GetArticleImageDir(aida)
 	os.Mkdir(imageDir, os.ModePerm)
 
-	localPath, sitePath := Hugo.genArticleImagePath(aida)
+	localPath, sitePath := Hugo.GenArticleImagePath(aida)
 	err := os.WriteFile(localPath, file, os.ModePerm)
 	if err != nil {
-		slog.Error("write image fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 
 	return success(sitePath)
@@ -303,8 +271,7 @@ func (a *App) ArticleInsertImageBlob(aid int, blob string) *R {
 func (a *App) SiteConfigGet() *R {
 	c, err := Hugo.ReadConfig()
 	if err != nil {
-		slog.Error("get site config fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 	return success(c)
 }
@@ -312,8 +279,23 @@ func (a *App) SiteConfigGet() *R {
 func (a *App) SiteConfigSave(c Config) *R {
 	err := Hugo.WriteConfig(c)
 	if err != nil {
-		slog.Error("save site config fail", err)
-		return failM(err.Error())
+		return fail(err)
+	}
+	return success(nil)
+}
+
+func (a *App) SiteConfigGetStr() *R {
+	c, err := Hugo.ReadConfigStr()
+	if err != nil {
+		return fail(err)
+	}
+	return success(c)
+}
+
+func (a *App) SiteConfigSaveStr(c []byte) *R {
+	err := Hugo.WriteConfigStr(c)
+	if err != nil {
+		return fail(err)
 	}
 	return success(nil)
 }
@@ -321,22 +303,41 @@ func (a *App) SiteConfigSave(c Config) *R {
 func (a *App) ConfGet(t ConfType) *R {
 	v, err := Conf.Read(t)
 	if err != nil {
-		slog.Error("read conf fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
-	return success(v)
+	var r map[string]interface{}
+	json.Unmarshal(v, &r)
+	return success(r)
 }
 
-func (a *App) ConfSave(t ConfType, v interface{}) *R {
-	err := Conf.Write(t, v)
+func (a *App) ConfSave(t ConfType, v string) *R {
+	appConf, err := getAppConf()
 	if err != nil {
-		slog.Error("save conf fail", err)
-		return failM(err.Error())
+		return fail(err)
+	}
+	appConf.ActivedDeploy = t
+	appConfBytes, err := json.Marshal(appConf)
+	if err != nil {
+		return fail(errors.New("app conf marshal error"))
+	}
+	Conf.Write(confTypeApp, string(appConfBytes))
+
+	err = Conf.Write(t, v)
+	if err != nil {
+		return fail(err)
 	}
 	return success(nil)
 }
 
-func (a *App) SelectConfImage(imgPath string) *R {
+func (a *App) ConfGetThemes() *R {
+	ts, err := Hugo.GetThemes()
+	if err != nil {
+		return fail(err)
+	}
+	return success(ts)
+}
+
+func (a *App) SelectConfImage(img string) *R {
 	selection, err := rt.OpenFileDialog(a.ctx, rt.OpenDialogOptions{
 		Title: "Select Image",
 		Filters: []rt.FileFilter{
@@ -347,22 +348,38 @@ func (a *App) SelectConfImage(imgPath string) *R {
 		},
 	})
 	if err != nil {
-		slog.Error("select image fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 
-	p := path.Join(Hugo.SitePath, imgPath)
+	p := path.Join(Hugo.ImageDir, img)
 	// remove old
 	os.Remove(p)
 
 	// copy conf image
-	err = CopyAsset(selection, p)
+	err = util.CopyFile(selection, p)
 	if err != nil {
-		slog.Error("copy image fail", err)
-		return failM(err.Error())
+		return fail(err)
 	}
 
 	return success(nil)
+}
+
+func (a *App) GetSiteImageConf(imgPath string) *R {
+	avatar := ""
+	_, err := os.Stat(Hugo.ImageDir + "/avatar.png")
+	if !os.IsNotExist(err) {
+		avatar = SiteImagePath + "/avatar.png"
+	}
+
+	favicon := ""
+	_, err = os.Stat(Hugo.ImageDir + "/favicon.ico")
+	if !os.IsNotExist(err) {
+		favicon = SiteImagePath + "/favicon.ico"
+	}
+	return success(map[string]string{
+		"avatar":  avatar,
+		"favicon": favicon,
+	})
 }
 
 func saveArticleToDB(aidpr *string, meta Meta) error {
@@ -377,39 +394,44 @@ func saveArticleToDB(aidpr *string, meta Meta) error {
 		r, err := DB.Exec("insert into t_article(title, tags, create_time, update_time) values(?,?,?,?)",
 			title, tags, createTime, updateTime)
 		if err != nil {
-			slog.Error("article save fail", err)
 			return err
 		}
 		nid, err := r.LastInsertId()
 		if err != nil {
-			slog.Error("article save fail", err)
 			return err
 		}
 		*aidpr = strconv.FormatInt(nid, 10)
 	} else {
 		id, err := strconv.Atoi(aid)
 		if err != nil {
-			slog.Error("article save fail, id invalid", err)
 			return err
 		}
 		_, err = DB.Exec("update t_article set title=?, tags=?, update_time=? where id=?",
 			title, tags, updateTime, id)
 		if err != nil {
-			slog.Error("article save fail", err)
 			return err
 		}
 	}
 	return nil
 }
 
+func getAppConf() (c *AppConf, err error) {
+	cs, err := Conf.Read(confTypeApp)
+	if err != nil {
+		return
+	}
+	c = &AppConf{}
+	if cs == nil {
+		return
+	}
+	err = json.Unmarshal(cs, c)
+	return
+}
+
 func success(data interface{}) *R {
 	return &R{Code: CodeSuccess, Msg: "success", Data: data}
 }
 
-func fail() *R {
-	return &R{Code: CodeError, Msg: "error"}
-}
-
-func failM(msg string) *R {
-	return &R{Code: CodeError, Msg: msg}
+func fail(err error) *R {
+	return &R{Code: CodeError, Msg: err.Error()}
 }

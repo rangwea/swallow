@@ -3,6 +3,17 @@ package backend
 import (
 	"bufio"
 	"bytes"
+	"fmt"
+	"net/http"
+	"os"
+	"path"
+	"strconv"
+	"strings"
+	"sync/atomic"
+	"time"
+
+	"github.com/rangwea/swallows/backend/util"
+
 	"github.com/gohugoio/hugo/config"
 	"github.com/gohugoio/hugo/config/allconfig"
 	"github.com/gohugoio/hugo/create/skeletons"
@@ -12,15 +23,9 @@ import (
 	"github.com/gohugoio/hugo/livereload"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slog"
-	"net/http"
-	"os"
-	"path"
-	"strconv"
-	"strings"
-	"sync/atomic"
-	"time"
 
 	"github.com/BurntSushi/toml"
+	cp "github.com/otiai10/copy"
 )
 
 const AboutAid string = "about"
@@ -95,7 +100,7 @@ func (h *_hugo) Initialize() {
 
 func (h *_hugo) NewSite() {
 	slog.Info("start new site")
-	if existed, _ := PathExists(h.SitePath); existed {
+	if existed, _ := util.PathExists(h.SitePath); existed {
 		slog.Info("site existed")
 		return
 	}
@@ -103,36 +108,32 @@ func (h *_hugo) NewSite() {
 	// call hugo to create site
 	err := skeletons.CreateSite(h.SitePath, hugofs.Os, false, "toml")
 	if err != nil {
-		slog.Error("copy config fail", err)
-		return
+		panic(fmt.Errorf("copy config fail, %w", err))
 	}
 
 	// copy config file
 	os.Remove(h.configFile)
-	err = CopyAsset("hugo.toml", h.configFile)
+	err = util.CopyAsset("hugo.toml", h.configFile)
 	if err != nil {
-		slog.Error("copy config fail", err)
-		return
+		panic(fmt.Errorf("copy config fail, %w", err))
 	}
 	slog.Info("copy config file")
 
 	err = h.setWorkingDirConfig()
 	if err != nil {
-		slog.Error("set workingDir config fail", err)
-		return
+		panic(fmt.Errorf("set workingDir config fail, %w", err))
 	}
 
 	// copy theme zip file
 	themeCopyDstPath := path.Join(AppHome, "themes.zip")
-	err = CopyAsset("themes.zip", themeCopyDstPath)
+	err = util.CopyAsset("themes.zip", themeCopyDstPath)
 	if err != nil {
-		slog.Error("copy themes.zip fail", err)
+		panic(fmt.Errorf("copy themes.zip fail, %w", err))
 	}
 	// unzip
-	err = UnZip(themeCopyDstPath, h.SitePath)
+	err = util.UnZip(themeCopyDstPath, h.SitePath)
 	if err != nil {
-		slog.Error("unzip themes file fail", err)
-		return
+		panic(fmt.Errorf("unzip themes file fail, %w", err))
 	}
 	// remove zip
 	os.Remove(themeCopyDstPath)
@@ -165,6 +166,17 @@ func (h *_hugo) Build() (err error) {
 		return
 	}
 
+	// copy static
+	t, err := h.getCurrentTheme()
+	if err != nil {
+		return errors.Wrap(err, "get current theme fail")
+	}
+	err = cp.Copy(path.Join(h.themeDir, t, "static"), h.PublicDir)
+	if err != nil {
+		return errors.Wrap(err, "copy theme static file fail")
+	}
+
+	// build
 	err = s.Build(hugolib.BuildCfg{ErrRecovery: true})
 	if err != nil {
 		slog.Error("hugo site build fail", err)
@@ -216,7 +228,7 @@ func (h *_hugo) WriteArticle(aid string, meta Meta, content string) error {
 	} else {
 		// common article file
 		adir := path.Join(h.articleDir, aid)
-		if e, _ := PathExists(adir); !e {
+		if e, _ := util.PathExists(adir); !e {
 			err = os.MkdirAll(adir, os.ModePerm)
 			if err != nil {
 				return err
@@ -265,11 +277,11 @@ func (h *_hugo) DeleteArticle(aid string) error {
 	return nil
 }
 
-func (h *_hugo) getArticleImageDir(aid string) string {
+func (h *_hugo) GetArticleImageDir(aid string) string {
 	return path.Join(h.SitePath, "/static/images", aid)
 }
 
-func (h *_hugo) genArticleImagePath(aid string) (localPath string, sitePath string) {
+func (h *_hugo) GenArticleImagePath(aid string) (localPath string, sitePath string) {
 	filename := strconv.FormatInt(time.Now().UnixNano(), 10) + ".png"
 	sitePath = path.Join("/static/images", aid, filename)
 	localPath = path.Join(h.SitePath, sitePath)
@@ -330,11 +342,32 @@ func (h *_hugo) WriteConfig(c Config) error {
 	return nil
 }
 
+func (h *_hugo) ReadConfigStr() (c []byte, err error) {
+	c, err = os.ReadFile(h.configFile)
+	if err != nil {
+		slog.Error("read config fail", err)
+		return
+	}
+	return
+}
+
+func (h *_hugo) WriteConfigStr(c []byte) (err error) {
+	err = os.WriteFile(h.configFile, c, os.ModePerm)
+	if err != nil {
+		slog.Error("write config fail", err)
+		return
+	}
+	return
+}
+
 func (h *_hugo) SplitMetaAndContent(article string) (meta string, content string) {
 	var lines []string
 	sc := bufio.NewScanner(strings.NewReader(article))
 	for sc.Scan() {
 		lines = append(lines, sc.Text())
+	}
+	if len(lines) == 0 {
+		return "", ""
 	}
 
 	inMeta := false
@@ -355,6 +388,17 @@ func (h *_hugo) SplitMetaAndContent(article string) (meta string, content string
 	content = strings.Join(lines[secondCodeMark+1:], "\n")
 
 	return meta, content
+}
+
+func (h *_hugo) GetThemes() (themes []string, err error) {
+	es, err := os.ReadDir(h.themeDir)
+	if err != nil {
+		return
+	}
+	for _, e := range es {
+		themes = append(themes, e.Name())
+	}
+	return
 }
 
 func (h *_hugo) setWorkingDirConfig() error {
@@ -384,4 +428,12 @@ func (h *_hugo) setWorkingDirConfig() error {
 		return err
 	}
 	return nil
+}
+
+func (h *_hugo) getCurrentTheme() (string, error) {
+	c, err := h.ReadConfig()
+	if err != nil {
+		return "", err
+	}
+	return c.Theme, nil
 }

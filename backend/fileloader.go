@@ -2,7 +2,6 @@ package backend
 
 import (
 	"fmt"
-	"golang.org/x/exp/slog"
 	"net/http"
 	"os"
 	"path"
@@ -21,7 +20,7 @@ func (h *FileLoader) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	var err error
 
 	var readFilePath string
-	if strings.HasPrefix(req.URL.Path, "/static/images") {
+	if strings.HasPrefix(req.URL.Path, SiteImagePath) {
 		// site image
 		readFilePath = path.Join(Hugo.SitePath, req.URL.Path)
 	}
@@ -37,7 +36,6 @@ func (h *FileLoader) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusBadRequest)
 		res.Write([]byte(fmt.Sprintf("Could not load file %s", readFilePath)))
 	}
-	slog.Debug("read file", readFilePath)
 
 	res.Write(fileData)
 }
