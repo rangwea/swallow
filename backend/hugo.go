@@ -3,6 +3,14 @@ package backend
 import (
 	"bufio"
 	"bytes"
+	"net/http"
+	"os"
+	"path"
+	"strconv"
+	"strings"
+	"sync/atomic"
+	"time"
+
 	"github.com/gohugoio/hugo/config"
 	"github.com/gohugoio/hugo/config/allconfig"
 	"github.com/gohugoio/hugo/create/skeletons"
@@ -12,15 +20,9 @@ import (
 	"github.com/gohugoio/hugo/livereload"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slog"
-	"net/http"
-	"os"
-	"path"
-	"strconv"
-	"strings"
-	"sync/atomic"
-	"time"
 
 	"github.com/BurntSushi/toml"
+	cp "github.com/otiai10/copy"
 )
 
 const AboutAid string = "about"
@@ -165,6 +167,17 @@ func (h *_hugo) Build() (err error) {
 		return
 	}
 
+	// copy static
+	t, err := h.getCurrentTheme()
+	if err != nil {
+		return errors.Wrap(err, "get current theme fail")
+	}
+	err = cp.Copy(path.Join(h.themeDir, t, "static"), h.PublicDir)
+	if err != nil {
+		return errors.Wrap(err, "copy theme static file fail")
+	}
+
+	// build
 	err = s.Build(hugolib.BuildCfg{ErrRecovery: true})
 	if err != nil {
 		slog.Error("hugo site build fail", err)
@@ -384,4 +397,12 @@ func (h *_hugo) setWorkingDirConfig() error {
 		return err
 	}
 	return nil
+}
+
+func (h *_hugo) getCurrentTheme() (string, error) {
+	c, err := h.ReadConfig()
+	if err != nil {
+		return "", err
+	}
+	return c.Theme, nil
 }

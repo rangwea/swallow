@@ -8,7 +8,7 @@ import (
 )
 
 func before() {
-	AppHome = "/Users/feijianwu/.swallow/site"
+	AppHome = ""
 	if e, _ := PathExists(AppHome); !e {
 		if err := os.Mkdir(AppHome, os.ModePerm); err != nil {
 			log.Fatal("make app home dir fail", err)
