@@ -18,6 +18,7 @@ import {
   ConfSave,
   ConfGet,
   SelectConfImage,
+  ConfGetThemes,
 } from "../../wailsjs/go/backend/App";
 
 const { Header, Footer, Content } = Layout;
@@ -28,8 +29,10 @@ function Config() {
   const [currentTabKey, setCurrentTabKey] = useState("website");
   const [avatar, setAvatar] = useState("/static/images/avatar.png");
   const [favicon, setFavicon] = useState("/static/images/favicon.ico");
+  const [themeOptions, setThemeOptions] = useState([]);
 
   useEffect(() => {
+    getThemes()
     getConfigData(currentTabKey);
   }, []);
 
@@ -38,11 +41,29 @@ function Config() {
     getConfigData(activeKey);
   };
 
+  const getThemes = () => {
+    ConfGetThemes().then((result) => {
+      if (result.code === 0) {
+        message.error("get themes fail:", result.msg);
+      } else {
+        let ts = []
+        for (const x of result.data) {
+          ts.push({
+            "value": x,
+            "label": x
+          })
+        }
+        console.log(ts)
+        setThemeOptions(ts);
+      }
+    });
+  };
+
   const getConfigData = (type) => {
     if (type === "website") {
       SiteConfigGet().then((result) => {
         if (result.code === 0) {
-          message.error("get website config fail:", r.msg);
+          message.error("get website config fail:", result.msg);
         } else {
           websiteForm.setFieldsValue(result.data);
         }
@@ -50,7 +71,7 @@ function Config() {
     } else if (type === "github") {
       ConfGet("github").then((r) => {
         if (r.code === 0) {
-          message.error("get config fail:", r.msg);
+          message.error("get config fail:", result.msg);
         } else {
           githubForm.setFieldsValue(r.data);
         }
@@ -103,23 +124,7 @@ function Config() {
                 <Input />
               </Form.Item>
               <Form.Item label="Theme" name="theme">
-                <Select
-                  defaultValue="stack"
-                  options={[
-                    {
-                      value: "stack",
-                      label: "stack",
-                    },
-                    {
-                      value: "jane",
-                      label: "jane",
-                    },
-                    {
-                      value: "mini",
-                      label: "mini",
-                    },
-                  ]}
-                />
+                <Select defaultValue="stack" options={themeOptions} />
               </Form.Item>
               <Form.Item label="Language" name="defaultContentLanguage">
                 <Select

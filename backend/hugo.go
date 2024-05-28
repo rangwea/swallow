@@ -370,6 +370,17 @@ func (h *_hugo) SplitMetaAndContent(article string) (meta string, content string
 	return meta, content
 }
 
+func (h *_hugo) GetThemes() (themes []string, err error) {
+	es, err := os.ReadDir(h.themeDir)
+	if err != nil {
+		return
+	}
+	for _, e := range es {
+		themes = append(themes, e.Name())
+	}
+	return
+}
+
 func (h *_hugo) setWorkingDirConfig() error {
 	b, err := os.ReadFile(h.configFile)
 	if err != nil {

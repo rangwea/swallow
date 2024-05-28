@@ -7,6 +7,7 @@ require (
 	github.com/gohugoio/hugo v0.126.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/otiai10/copy v1.14.0
 	github.com/wailsapp/wails/v2 v2.5.1
 )
 
@@ -76,7 +77,6 @@ require (
 	github.com/muesli/smartcrop v0.3.0 // indirect
 	github.com/niklasfasching/go-org v1.7.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/otiai10/copy v1.14.0 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect

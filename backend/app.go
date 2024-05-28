@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"golang.org/x/exp/slog"
 	"os"
 	"os/user"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	"golang.org/x/exp/slog"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -334,6 +335,14 @@ func (a *App) ConfSave(t ConfType, v interface{}) *R {
 		return failM(err.Error())
 	}
 	return success(nil)
+}
+
+func (a *App) ConfGetThemes() *R {
+	ts, err := Hugo.GetThemes()
+	if err != nil {
+		return failM(err.Error())
+	}
+	return success(ts)
 }
 
 func (a *App) SelectConfImage(imgPath string) *R {
