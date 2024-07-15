@@ -1,0 +1,37 @@
+#root,
+html,
+body {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.editor-title-input {
+  border: none !important;
+  @apply outline-none focus:outline-none;
+}
+
+.w-md-editor {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.w-md-editor-input {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  border: none !important;
+  overflow: hidden;
+
+  &::-webkit-scrollbar {
+      display: none !important;
+  }
+}
+
+.w-md-editor-bar {
+  visibility: hidden;
+}
+
+.w-md-editor-text-input::placeholder {
+  color: #9d9d9d;
+}

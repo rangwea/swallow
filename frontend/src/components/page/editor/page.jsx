@@ -1,0 +1,345 @@
+import React, { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  icons,
+  Image,
+  Settings,
+  Eye,
+  FilePenLine,
+  Check,
+  MoveLeft,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import MDEditor from "@uiw/react-md-editor";
+import {
+  ArticleSave,
+  ArticleGet,
+  ArticleInsertImage,
+  ArticleInsertImageBlob,
+} from "../../../../wailsjs/go/backend/App";
+import { getCurrentTime } from "../util";
+import "../style.css";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { TagInput } from "emblor";
+
+function EditorPage() {
+  const [params] = useSearchParams();
+  const [id, setId] = useState(params.get("id"));
+
+  // article vars
+  const [title, setTitle] = useState(); // title
+  const [content, setContent] = useState(""); // content
+
+  // config vars
+  const [drawerOpen, setDrawerOpen] = useState(false); // open config drawer?
+
+  // preview button vars
+  const [preview, setPreview] = useState("edit");
+  const [previewIcon, setPreviewIcon] = useState("Eye");
+
+  const mdTextAreaId = "mdTextArea";
+
+  const [changed, setChanged] = useState(false);
+
+  const form = useForm();
+
+  const [tags, setTags] = React.useState([]);
+  const [activeTagIndex, setActiveTagIndex] = useState(null);
+
+  useEffect(() => {
+    init();
+  }, []);
+
+  function init() {
+    if (id) {
+      // existed id，edit
+      ArticleGet(id).then((result) => {
+        if (result.code !== 1) {
+          // todo message
+          return;
+        }
+        let meta = result.data.meta;
+        setTitle(meta.title);
+        setContent(result.data.content);
+        //form.setFieldsValue(meta);
+      });
+    } else {
+      let curDate = getCurrentTime();
+      //form.setFieldsValue({
+      //  tags: [],
+      //  date: curDate,
+      //  lastmod: curDate,
+      //});
+    }
+  }
+
+  function save(e) {
+    let meta = getMeta();
+    ArticleSave(id, meta, content).then((r) => {
+      if (r.code === 1) {
+        // success
+        setId(r.data);
+        // todo message
+        setChanged(false);
+      } else {
+        // fail
+        // todo msg
+      }
+    });
+  }
+
+  function showDrawer() {
+    setDrawerOpen(true);
+  }
+
+  function getMeta() {
+    let meta = form.getFieldsValue();
+    meta["title"] = title;
+    return meta;
+  }
+
+  function insertImage() {
+    ArticleInsertImage(id).then((r) => {
+      insertImageTextToArea(r);
+    });
+  }
+
+  function insertImageTextToArea(r) {
+    if (r.code === 1) {
+      const md = insertToTextArea(`![](${r.data})\n`);
+      setContent(md);
+    }
+  }
+
+  function contentChange(c) {
+    setChanged(true);
+    setContent(c);
+  }
+
+  function previewToggle() {
+    if (preview === "edit") {
+      setPreview("preview");
+      setPreviewIcon("Eye");
+    } else {
+      setPreview("edit");
+      setPreviewIcon("FilePenLine");
+    }
+  }
+
+  function insertToTextArea(insertString) {
+    const textarea = document.getElementById(mdTextAreaId);
+    if (!textarea) {
+      return null;
+    }
+
+    let sentence = textarea.value;
+    const len = sentence.length;
+    const pos = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    const front = sentence.slice(0, pos);
+    const back = sentence.slice(pos, len);
+
+    sentence = front + insertString + back;
+
+    textarea.value = sentence;
+    textarea.selectionEnd = end + insertString.length;
+
+    return sentence;
+  }
+
+  function onImagePasted(dataTransfer) {
+    const file = dataTransfer.files.item(0);
+    Promise.resolve(file.arrayBuffer()).then((ab) => {
+      const u = new Uint8Array(ab);
+      ArticleInsertImageBlob(id, `[${u.toString()}]`).then((r) => {
+        insertImageTextToArea(r);
+      });
+    });
+  }
+
+  function titleChange(e) {
+    setChanged(true);
+    setTitle(e.target.value);
+  }
+
+  function metaChange() {
+    setChanged(true);
+  }
+
+  const IBtn = ({ icon }) => {
+    const LucideIcon = icons[icon];
+    return (
+      <Button className="m-1" variant="ghost" size="icon">
+        <LucideIcon size="22" color="#676565" strokeWidth={1.5} />
+      </Button>
+    );
+  };
+
+  const ToolBtn = ({ icon, onClick }) => {
+    const LucideIcon = icons[icon];
+    return (
+      <Button variant="ghost" size="icon" className="w-8 h-8" onClick={onClick}>
+        <LucideIcon size="18" color="#676565" strokeWidth={1} />
+      </Button>
+    );
+  };
+
+  return (
+    <Drawer direction="right">
+      <div className="flex flex-col h-screen space-y-1">
+        <div
+          className="flex justify-end w-full space-x-2 border-b p-2 shadow-none"
+          style={{ "--wails-draggable": "drag" }}
+        >
+          <Link to="/">
+            <Button variant="ghost" size="icon" className="w-8 h-8">
+              <MoveLeft size="18" color="#676565" strokeWidth={1} />
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-8 h-8"
+            onClick={save}
+          >
+            <Check
+              size="18"
+              color={changed ? "#13cd64" : "#676565"}
+              strokeWidth={1}
+            />
+          </Button>
+        </div>
+        <div className="flex justify-center items-center relative">
+          <div className="flex flex-col w-3/5">
+            <input
+              className="border-0 border-none shadow-none ring-0 focus:ring-0 h-10 text-lg py-1 px-2 editor-title-input"
+              placeholder="Title..."
+              onChange={titleChange}
+            ></input>
+            <MDEditor
+              value={content}
+              onChange={contentChange}
+              onPaste={(e) => {
+                if (e.clipboardData.files.length > 0) {
+                  e.preventDefault();
+                  onImagePasted(e.clipboardData);
+                }
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                onImagePasted(e.dataTransfer);
+              }}
+              style={{
+                marginTop: 3,
+                marginBottom: 10,
+                border: "none",
+              }}
+              hideToolbar={true}
+              height="calc(100vh - 100px)"
+              preview={preview}
+              textareaProps={{
+                id: mdTextAreaId,
+                placeholder: "Write you text",
+              }}
+            />
+          </div>
+          <div className="fixed top-1/2 right-1 transform -translate-y-1/2 h-[100px] flex flex-col space-y-1">
+            <ToolBtn icon="Image"></ToolBtn>
+            <ToolBtn icon="Eye"></ToolBtn>
+            <DrawerTrigger>
+              <ToolBtn icon="Settings"></ToolBtn>
+            </DrawerTrigger>
+          </div>
+        </div>
+
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Article Meta</DrawerTitle>
+          </DrawerHeader>
+          <Separator className="my-4" />
+          <Form {...form}>
+            <form className="space-y-4 mx-5">
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags</FormLabel>
+                    <FormControl>
+                      <TagInput
+                        {...field}
+                        tags={tags}
+                        placeholder="Enter a tag"
+                        setTags={(newTags) => {
+                          setTags(newTags);
+                          form.setValue("tags", newTags);
+                        }}
+                        activeTagIndex={activeTagIndex}
+                        setActiveTagIndex={setActiveTagIndex}
+                        size={"md"}
+                        animation={"fadeIn"}
+                        styleClasses={{
+                          input: "h-10",
+                          inlineTagsContainer: "pl-1",
+                        }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              ></FormField>
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Create time" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              ></FormField>
+              <FormField
+                control={form.control}
+                name="lastmod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lastmod</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Last modify time" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              ></FormField>
+            </form>
+          </Form>
+          <DrawerClose className="mt-4">
+            <Button variant="outline" className="w-1/2">
+              Close
+            </Button>
+          </DrawerClose>
+        </DrawerContent>
+      </div>
+    </Drawer>
+  );
+}
+
+export default EditorPage;

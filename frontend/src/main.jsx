@@ -1,27 +1,28 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import './index.css'
 import { createHashRouter, RouterProvider } from "react-router-dom";
-import "./style.css";
-import ArticleList from "./components/ArticleList";
-import ArticleEditor from "./components/ArticleEditor";
-import Config from "./components/Config";
+import Home from '@/components/page/home.jsx'
+import SettingsPage from "@/components/page/settings/page.jsx"
+import EditorPage from "@/components/page/editor/page.jsx"
+import Example from "@/components/page/test.jsx"
 
 const router = createHashRouter([
   {
     path: "/",
-    element: <ArticleList />,
+    element: <Home />,
   },
   {
-    path: "/articleList",
-    element: <ArticleList />,
+    path: "/test",
+    element: <Example />,
   },
   {
-    path: "/articleEditor",
-    element: <ArticleEditor />,
+    path: "/settings",
+    element: <SettingsPage />,
   },
   {
-    path: "/config",
-    element: <Config />,
+    path: "/editor",
+    element: <EditorPage />,
   },
 ]);
 
