@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import {
-  icons,
-  Image,
-  Settings,
-  Eye,
-  FilePenLine,
-  Check,
-  MoveLeft,
-} from "lucide-react";
+import { icons, Check, MoveLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -78,15 +70,19 @@ function EditorPage() {
         let meta = result.data.meta;
         setTitle(meta.title);
         setContent(result.data.content);
-        //form.setFieldsValue(meta);
+        form.setValue(
+          "tags",
+          meta.tags.map((e) => {
+            text: e;
+          })
+        );
+        form.setValue("date", meta.date);
+        form.setValue("lastmod", meta.lastmod);
       });
     } else {
       let curDate = getCurrentTime();
-      //form.setFieldsValue({
-      //  tags: [],
-      //  date: curDate,
-      //  lastmod: curDate,
-      //});
+      form.setValue("date", curDate);
+      form.setValue("lastmod", curDate);
     }
   }
 
@@ -105,13 +101,10 @@ function EditorPage() {
     });
   }
 
-  function showDrawer() {
-    setDrawerOpen(true);
-  }
-
   function getMeta() {
-    let meta = form.getFieldsValue();
+    let meta = form.getValues();
     meta["title"] = title;
+    meta["tags"] = meta["tags"].map((e) => e.text);
     return meta;
   }
 
@@ -136,10 +129,10 @@ function EditorPage() {
   function previewToggle() {
     if (preview === "edit") {
       setPreview("preview");
-      setPreviewIcon("Eye");
+      setPreviewIcon("FilePenLine");
     } else {
       setPreview("edit");
-      setPreviewIcon("FilePenLine");
+      setPreviewIcon("Eye");
     }
   }
 
@@ -184,20 +177,11 @@ function EditorPage() {
     setChanged(true);
   }
 
-  const IBtn = ({ icon }) => {
-    const LucideIcon = icons[icon];
-    return (
-      <Button className="m-1" variant="ghost" size="icon">
-        <LucideIcon size="22" color="#676565" strokeWidth={1.5} />
-      </Button>
-    );
-  };
-
   const ToolBtn = ({ icon, onClick }) => {
     const LucideIcon = icons[icon];
     return (
       <Button variant="ghost" size="icon" className="w-8 h-8" onClick={onClick}>
-        <LucideIcon size="18" color="#676565" strokeWidth={1} />
+        <LucideIcon size="18" color="#676565" strokeWidth={1.5} />
       </Button>
     );
   };
@@ -206,25 +190,21 @@ function EditorPage() {
     <Drawer direction="right">
       <div className="flex flex-col h-screen space-y-1">
         <div
-          className="flex justify-end w-full space-x-2 border-b p-2 shadow-none"
+          className="flex justify-end w-full space-x-2 border-b pr-2 shadow-none"
           style={{ "--wails-draggable": "drag" }}
         >
           <Link to="/">
-            <Button variant="ghost" size="icon" className="w-8 h-8">
-              <MoveLeft size="18" color="#676565" strokeWidth={1} />
+            <Button variant="ghost" size="icon" className="w-8 h-8 m-1">
+              <MoveLeft size="18" color="#676565" />
             </Button>
           </Link>
           <Button
             variant="ghost"
             size="icon"
-            className="w-8 h-8"
+            className="w-8 h-8 m-1"
             onClick={save}
           >
-            <Check
-              size="18"
-              color={changed ? "#13cd64" : "#676565"}
-              strokeWidth={1}
-            />
+            <Check size="18" color={changed ? "#13cd64" : "#676565"} />
           </Button>
         </div>
         <div className="flex justify-center items-center relative">
@@ -262,8 +242,8 @@ function EditorPage() {
             />
           </div>
           <div className="fixed top-1/2 right-1 transform -translate-y-1/2 h-[100px] flex flex-col space-y-1">
-            <ToolBtn icon="Image"></ToolBtn>
-            <ToolBtn icon="Eye"></ToolBtn>
+            <ToolBtn icon="Image" onClick={insertImage}></ToolBtn>
+            <ToolBtn icon={previewIcon} onClick={previewToggle}></ToolBtn>
             <DrawerTrigger>
               <ToolBtn icon="Settings"></ToolBtn>
             </DrawerTrigger>
