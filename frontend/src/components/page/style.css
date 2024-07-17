@@ -7,6 +7,15 @@ body {
   overflow: hidden;
 }
 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .editor-title-input {
   border: none !important;
   @apply outline-none focus:outline-none;

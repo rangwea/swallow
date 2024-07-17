@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
@@ -12,12 +12,61 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  SiteConfigGet,
+  SiteConfigSave,
+  ConfGetThemes,
+} from "../../../../wailsjs/go/backend/App";
 
 function SiteSetting() {
   const form = useForm();
+  const [themeOptions, setThemeOptions] = useState([]);
+
+  useEffect(() => {
+    init();
+  }, []);
+
+  function init() {
+    // get themes
+    getThemes();
+    // init form
+    SiteConfigGet().then((result) => {
+      if (result.code === 0) {
+        message.error("get website config fail:" + result.msg);
+      } else {
+        const data = result.data;
+        for (var k in data) {
+          form.setValue(k, data[k]);
+        }
+      }
+    });
+  }
+
+  const getThemes = () => {
+    ConfGetThemes().then((result) => {
+      if (result.code === 0) {
+        message.error("get themes fail:" + result.msg);
+      } else {
+        let ts = [];
+        for (const x of result.data) {
+          ts.push({
+            value: x,
+            label: x,
+          });
+        }
+        setThemeOptions(ts);
+      }
+    });
+  };
 
   function onSubmit(values) {
-    console.log(values);
+    SiteConfigSave(values).then((r) => {
+      if (r.code === 0) {
+        message.error(r.msg);
+      } else {
+        message.info("save success", 1);
+      }
+    });
   }
 
   return (
@@ -68,7 +117,9 @@ function SiteSetting() {
                 <FormControl>
                   <Input placeholder="swallow" {...field} />
                 </FormControl>
-                <FormDescription>select your website description</FormDescription>
+                <FormDescription>
+                  select your website description
+                </FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -82,7 +133,9 @@ function SiteSetting() {
                 <FormControl>
                   <Input placeholder="swallow" {...field} />
                 </FormControl>
-                <FormDescription>select your website description</FormDescription>
+                <FormDescription>
+                  select your website description
+                </FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -96,7 +149,9 @@ function SiteSetting() {
                 <FormControl>
                   <Input placeholder="swallow" {...field} />
                 </FormControl>
-                <FormDescription>select your website description</FormDescription>
+                <FormDescription>
+                  select your website description
+                </FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -110,7 +165,9 @@ function SiteSetting() {
                 <FormControl>
                   <Input placeholder="swallow" {...field} />
                 </FormControl>
-                <FormDescription>select your website description</FormDescription>
+                <FormDescription>
+                  select your website description
+                </FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
