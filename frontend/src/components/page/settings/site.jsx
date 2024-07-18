@@ -11,6 +11,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import {
   SiteConfigGet,
@@ -47,15 +54,9 @@ function SiteSetting() {
       if (result.code === 0) {
         message.error("get themes fail:" + result.msg);
       } else {
-        let ts = [];
-        for (const x of result.data) {
-          ts.push({
-            value: x,
-            label: x,
-          });
-        }
-        setThemeOptions(ts);
+        setThemeOptions(result.data);
       }
+      console.log(themeOptions);
     });
   };
 
@@ -87,7 +88,7 @@ function SiteSetting() {
               <FormItem>
                 <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <Input placeholder="swallow" {...field} />
+                  <Input placeholder="Site Title" {...field} />
                 </FormControl>
                 <FormDescription>Your website title</FormDescription>
                 <FormMessage></FormMessage>
@@ -101,7 +102,7 @@ function SiteSetting() {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Input placeholder="swallow" {...field} />
+                  <Input placeholder="Site Description" {...field} />
                 </FormControl>
                 <FormDescription>Your website description</FormDescription>
                 <FormMessage></FormMessage>
@@ -114,9 +115,23 @@ function SiteSetting() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Theme</FormLabel>
-                <FormControl>
-                  <Input placeholder="swallow" {...field} />
-                </FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Theme" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {themeOptions.map((x) => (
+                      <SelectItem key={x} value={x}>
+                        {x}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormDescription>
                   select your website description
                 </FormDescription>
@@ -130,9 +145,20 @@ function SiteSetting() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Language</FormLabel>
-                <FormControl>
-                  <Input placeholder="swallow" {...field} />
-                </FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Language" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="zh">中文</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormDescription>
                   select your website description
                 </FormDescription>

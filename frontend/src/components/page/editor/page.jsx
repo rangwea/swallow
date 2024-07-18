@@ -190,7 +190,7 @@ function EditorPage() {
     <Drawer direction="right">
       <div className="flex flex-col h-screen space-y-1">
         <div
-          className="flex justify-end w-full space-x-2 border-b pr-2 shadow-none"
+          className="flex justify-end w-full space-x-2 border-b pr-4 shadow-none"
           style={{ "--wails-draggable": "drag" }}
         >
           <Link to="/">

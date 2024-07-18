@@ -2,8 +2,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
-import AppSetting from "@/components/page/settings/appsetting";
-import SiteSetting from "@/components/page/settings/sitesetting";
+import AppSetting from "@/components/page/settings/app";
+import SiteSetting from "@/components/page/settings/site";
 import { cn } from "@/lib/utils";
 import { CircleX } from "lucide-react";
 import "../style.css";
@@ -54,7 +54,7 @@ function SettingsPage() {
         <nav className="flex flex-col text-sm text-muted-foreground w-40">
           <NavItem text="General" to={<AppSetting />} />
           <NavItem text="Theme" to={<SiteSetting />} />
-          <NavItem text="Integrations" />
+          <NavItem text="Deploy" />
           <NavItem text="Organizations" />
         </nav>
         <div className="flex-1 pb-5 h-[calc(100vh-160px)] overflow-y-auto scrollbar-hide">
