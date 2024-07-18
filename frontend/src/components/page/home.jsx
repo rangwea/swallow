@@ -27,7 +27,7 @@ import {
   ArticleRemove,
   SitePreview,
   SiteDeploy,
-} from "../../../wailsjs/go/backend/App";
+} from "/wailsjs/go/backend/App";
 
 function Home() {
   const [articles, setArticles] = useState([]);

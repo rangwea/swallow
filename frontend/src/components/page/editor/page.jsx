@@ -10,7 +10,7 @@ import {
   ArticleGet,
   ArticleInsertImage,
   ArticleInsertImageBlob,
-} from "../../../../wailsjs/go/backend/App";
+} from "/wailsjs/go/backend/App";
 import { getCurrentTime } from "../util";
 import "../style.css";
 import {

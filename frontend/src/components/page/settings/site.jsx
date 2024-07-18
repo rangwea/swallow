@@ -23,7 +23,7 @@ import {
   SiteConfigGet,
   SiteConfigSave,
   ConfGetThemes,
-} from "../../../../wailsjs/go/backend/App";
+} from "/wailsjs/go/backend/App";
 
 function SiteSetting() {
   const form = useForm();
@@ -115,10 +115,7 @@ function SiteSetting() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Theme</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select {...field} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Theme" />
@@ -148,6 +145,7 @@ function SiteSetting() {
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>

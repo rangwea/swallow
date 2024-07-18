@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
@@ -13,22 +13,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
-  SiteConfigGet,
-  SiteConfigSave,
-  ConfGetThemes,
-} from "../../../../wailsjs/go/backend/App";
+  ConfSave,
+  ConfGet,
+} from "/wailsjs/go/backend/App";
 
-function DeploySetting() {
+function GitSetting() {
   const form = useForm();
-  const [themeOptions, setThemeOptions] = useState([]);
 
   useEffect(() => {
     init();
   }, []);
 
   function init() {
-    // get themes
-    getThemes();
     // init form
     SiteConfigGet().then((result) => {
       if (result.code === 0) {
@@ -41,23 +37,6 @@ function DeploySetting() {
       }
     });
   }
-
-  const getThemes = () => {
-    ConfGetThemes().then((result) => {
-      if (result.code === 0) {
-        message.error("get themes fail:" + result.msg);
-      } else {
-        let ts = [];
-        for (const x of result.data) {
-          ts.push({
-            value: x,
-            label: x,
-          });
-        }
-        setThemeOptions(ts);
-      }
-    });
-  };
 
   function onSubmit(values) {
     SiteConfigSave(values).then((r) => {
@@ -82,101 +61,80 @@ function DeploySetting() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
-            name="title"
+            name="repository"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel>Repository</FormLabel>
                 <FormControl>
-                  <Input placeholder="swallow" {...field} />
+                  <Input placeholder="Repository" {...field} />
                 </FormControl>
-                <FormDescription>Your website title</FormDescription>
+                <FormDescription>Your github repository url</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
           ></FormField>
           <FormField
             control={form.control}
-            name="description"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Description</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="swallow" {...field} />
+                  <Input placeholder="email" {...field} />
                 </FormControl>
-                <FormDescription>Your website description</FormDescription>
+                <FormDescription>Your email for github</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
           ></FormField>
           <FormField
             control={form.control}
-            name="theme"
+            name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Theme</FormLabel>
+                <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <Input placeholder="swallow" {...field} />
+                  <Input placeholder="username" {...field} />
                 </FormControl>
-                <FormDescription>
-                  select your website description
-                </FormDescription>
+                <FormDescription>Your username for github</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
           ></FormField>
           <FormField
             control={form.control}
-            name="defaultContentLanguage"
+            name="token"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Language</FormLabel>
+                <FormLabel>Token</FormLabel>
                 <FormControl>
-                  <Input placeholder="swallow" {...field} />
+                  <Input placeholder="token" {...field} />
                 </FormControl>
-                <FormDescription>
-                  select your website description
-                </FormDescription>
+                <FormDescription>Your token for github</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
           ></FormField>
           <FormField
             control={form.control}
-            name="copyright"
+            name="cname"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Copyright</FormLabel>
+                <FormLabel>CNAME</FormLabel>
                 <FormControl>
-                  <Input placeholder="swallow" {...field} />
+                  <Input placeholder="cname" {...field} />
                 </FormControl>
-                <FormDescription>
-                  select your website description
-                </FormDescription>
-                <FormMessage></FormMessage>
-              </FormItem>
-            )}
-          ></FormField>
-          <FormField
-            control={form.control}
-            name="params.author.name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Author</FormLabel>
-                <FormControl>
-                  <Input placeholder="swallow" {...field} />
-                </FormControl>
-                <FormDescription>
-                  select your website description
-                </FormDescription>
+                <FormDescription>Your cname for gitpage</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
           ></FormField>
           <Button type="submit">Submit</Button>
+          <Button>Connection Test</Button>
         </form>
       </Form>
     </div>
   );
 }
 
-export default DeploySetting;
+export default GitSetting;
