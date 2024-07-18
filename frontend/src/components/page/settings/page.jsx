@@ -1,10 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import AppSetting from "@/components/page/settings/appsetting";
 import SiteSetting from "@/components/page/settings/sitesetting";
 import { cn } from "@/lib/utils";
+import { CircleX } from "lucide-react";
 import "../style.css";
 
 function SettingsPage() {
@@ -42,6 +43,11 @@ function SettingsPage() {
         <p className="text-muted-foreground">
           Manage your account settings and set e-mail preferences.
         </p>
+        <Link to="/">
+          <Button className="fixed top-12 right-12 w-[32px] h-[32px] rounded-[16px]" variant="ghost" size="icon">
+            <CircleX color="#888888" strokeWidth={1}/>
+          </Button>
+        </Link>
       </div>
       <Separator className="my-6" />
       <div className="flex flex-row space-x-5 overflow-hidden">
@@ -51,7 +57,7 @@ function SettingsPage() {
           <NavItem text="Integrations" />
           <NavItem text="Organizations" />
         </nav>
-        <div className="flex-1 py-5 pb-5 h-[calc(100vh-160px)] overflow-y-auto scrollbar-hide">
+        <div className="flex-1 pb-5 h-[calc(100vh-160px)] overflow-y-auto scrollbar-hide">
           {panel}
         </div>
       </div>
