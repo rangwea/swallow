@@ -2,6 +2,7 @@ package backend
 
 import (
 	"fmt"
+	"github.com/rangwea/swallows/backend/util"
 	"golang.org/x/exp/slog"
 	"os"
 	"path"
@@ -28,7 +29,7 @@ func (conf *_conf) Initialize() {
 
 func (conf *_conf) Read(t ConfType) (v []byte, err error) {
 	filePath := conf.getFile(t)
-	if existed, _ := PathExists(filePath); !existed {
+	if existed, _ := util.PathExists(filePath); !existed {
 		return
 	}
 
@@ -42,7 +43,7 @@ func (conf *_conf) Read(t ConfType) (v []byte, err error) {
 
 func (conf *_conf) Write(t ConfType, v string) error {
 	filePath := conf.getFile(t)
-	if existed, _ := PathExists(filePath); !existed {
+	if existed, _ := util.PathExists(filePath); !existed {
 		os.Create(filePath)
 	}
 

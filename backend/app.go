@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/rangwea/swallows/backend/hugo"
+	"github.com/rangwea/swallows/backend/util"
 	"os"
 	"os/user"
 	"path"
@@ -59,7 +61,7 @@ func initialize() {
 
 	// component init
 	Conf.Initialize()
-	Hugo.Initialize()
+	hugo.Hugo.Initialize()
 }
 
 func initAppHome() {
@@ -68,7 +70,7 @@ func initAppHome() {
 		slog.Error("get user dir fail", err)
 	}
 	AppHome = path.Join(u.HomeDir, ".swallow")
-	if e, _ := PathExists(AppHome); !e {
+	if e, _ := util.PathExists(AppHome); !e {
 		if err = os.Mkdir(AppHome, os.ModePerm); err != nil {
 			slog.Error("make app home dir fail", err)
 		}
@@ -98,11 +100,11 @@ type AppConf struct {
 const confTypeApp ConfType = "app"
 
 func (a *App) SitePreview() *R {
-	err := Hugo.Preview()
+	err := hugo.Hugo.Preview()
 	if err != nil {
 		return fail(err)
 	}
-	err = OpenBrowser("http://localhost:1313/")
+	err = util.OpenBrowser("http://localhost:1313/")
 	if err != nil {
 		return fail(err)
 	}
@@ -110,7 +112,7 @@ func (a *App) SitePreview() *R {
 }
 
 func (a *App) SiteDeploy() *R {
-	err := Hugo.Build()
+	err := hugo.Hugo.Build()
 	if err != nil {
 		return fail(err)
 	}
@@ -123,7 +125,7 @@ func (a *App) SiteDeploy() *R {
 		return fail(errors.New("please set server config"))
 	}
 
-	err = Deployers.Deploy(ac.Server, Hugo.PublicDir)
+	err = Deployers.Deploy(ac.Server, hugo.Hugo.PublicDir)
 	if err != nil {
 		return fail(err)
 	}
@@ -146,14 +148,14 @@ func (a *App) ArticleList(search string) *R {
 	return success(r)
 }
 
-func (a *App) ArticleSave(aid string, meta Meta, content string) *R {
+func (a *App) ArticleSave(aid string, meta hugo.Meta, content string) *R {
 	n := time.Now().Format("2006-01-02 15:04:05")
 	meta.Lastmod = n
 	if meta.Date == "" {
 		meta.Date = n
 	}
 
-	if aid != AboutAid {
+	if aid != hugo.AboutAid {
 		// common article need save db
 		err := saveArticleToDB(&aid, meta)
 		if err != nil {
@@ -161,7 +163,7 @@ func (a *App) ArticleSave(aid string, meta Meta, content string) *R {
 		}
 	}
 
-	err := Hugo.WriteArticle(aid, meta, content)
+	err := hugo.Hugo.WriteArticle(aid, meta, content)
 	if err != nil {
 		return fail(err)
 	}
@@ -170,7 +172,7 @@ func (a *App) ArticleSave(aid string, meta Meta, content string) *R {
 }
 
 func (a *App) ArticleGet(aid string) *R {
-	meta, content, err := Hugo.ReadArticle(aid)
+	meta, content, err := hugo.Hugo.ReadArticle(aid)
 	if err != nil {
 		return fail(err)
 	}
@@ -187,7 +189,7 @@ func (a *App) ArticleRemove(aids []string) *R {
 		return fail(err)
 	}
 	for _, aid := range aids {
-		Hugo.DeleteArticle(aid)
+		hugo.Hugo.DeleteArticle(aid)
 	}
 	return success(nil)
 }
@@ -206,11 +208,11 @@ func (a *App) ArticleInsertImage(aid string) *R {
 		return fail(err)
 	}
 
-	imageDir := Hugo.getArticleImageDir(aid)
+	imageDir := hugo.Hugo.getArticleImageDir(aid)
 	os.Mkdir(imageDir, os.ModePerm)
 
-	localPath, sitePath := Hugo.genArticleImagePath(aid)
-	err = CopyFile(selection, localPath)
+	localPath, sitePath := hugo.Hugo.genArticleImagePath(aid)
+	err = util.CopyFile(selection, localPath)
 	if err != nil {
 		return fail(err)
 	}
@@ -226,10 +228,10 @@ func (a *App) ArticleInsertImageBlob(aid int, blob string) *R {
 
 	aida := strconv.Itoa(aid)
 
-	imageDir := Hugo.getArticleImageDir(aida)
+	imageDir := hugo.Hugo.getArticleImageDir(aida)
 	os.Mkdir(imageDir, os.ModePerm)
 
-	localPath, sitePath := Hugo.genArticleImagePath(aida)
+	localPath, sitePath := hugo.Hugo.genArticleImagePath(aida)
 	err := os.WriteFile(localPath, file, os.ModePerm)
 	if err != nil {
 		return fail(err)
@@ -239,15 +241,15 @@ func (a *App) ArticleInsertImageBlob(aid int, blob string) *R {
 }
 
 func (a *App) SiteConfigGet() *R {
-	c, err := Hugo.ReadConfig()
+	c, err := hugo.Hugo.ReadConfig()
 	if err != nil {
 		return fail(err)
 	}
 	return success(c)
 }
 
-func (a *App) SiteConfigSave(c Config) *R {
-	err := Hugo.WriteConfig(c)
+func (a *App) SiteConfigSave(c hugo.Config) *R {
+	err := hugo.Hugo.WriteConfig(c)
 	if err != nil {
 		return fail(err)
 	}
@@ -271,7 +273,7 @@ func (a *App) ConfSave(t ConfType, v string) *R {
 }
 
 func (a *App) ConfGetThemes() *R {
-	ts, err := Hugo.GetThemes()
+	ts, err := hugo.Hugo.GetThemes()
 	if err != nil {
 		return fail(err)
 	}
@@ -292,12 +294,12 @@ func (a *App) SelectConfImage(imgPath string) *R {
 		return fail(err)
 	}
 
-	p := path.Join(Hugo.SitePath, imgPath)
+	p := path.Join(hugo.Hugo.SitePath, imgPath)
 	// remove old
 	os.Remove(p)
 
 	// copy conf image
-	err = CopyAsset(selection, p)
+	err = util.CopyAsset(selection, p)
 	if err != nil {
 		return fail(err)
 	}
@@ -305,7 +307,7 @@ func (a *App) SelectConfImage(imgPath string) *R {
 	return success(nil)
 }
 
-func saveArticleToDB(aidpr *string, meta Meta) error {
+func saveArticleToDB(aidpr *string, meta hugo.Meta) error {
 	title := meta.Title
 	createTime := meta.Date
 	tags := strings.Join(meta.Tags, ",")

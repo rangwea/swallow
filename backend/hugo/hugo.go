@@ -1,8 +1,10 @@
-package backend
+package hugo
 
 import (
 	"bufio"
 	"bytes"
+	"github.com/rangwea/swallows/backend"
+	"github.com/rangwea/swallows/backend/util"
 	"net/http"
 	"os"
 	"path"
@@ -72,8 +74,8 @@ type ConfigAuthor struct {
 
 func (h *_hugo) Initialize() {
 	slog.Info("init hugo start")
-	h.hugo = path.Join(AppHome, "hugo")
-	h.SitePath = path.Join(AppHome, "site")
+	h.hugo = path.Join(backend.AppHome, "hugo")
+	h.SitePath = path.Join(backend.AppHome, "site")
 	h.articleDir = path.Join(h.SitePath, "content", "post")
 	h.articleImgDir = path.Join(h.articleDir, "images")
 	h.ImageDir = path.Join(h.SitePath, "static", "images")
@@ -97,7 +99,7 @@ func (h *_hugo) Initialize() {
 
 func (h *_hugo) NewSite() {
 	slog.Info("start new site")
-	if existed, _ := PathExists(h.SitePath); existed {
+	if existed, _ := util.PathExists(h.SitePath); existed {
 		slog.Info("site existed")
 		return
 	}
@@ -111,7 +113,7 @@ func (h *_hugo) NewSite() {
 
 	// copy config file
 	os.Remove(h.configFile)
-	err = CopyAsset("hugo.toml", h.configFile)
+	err = util.CopyAsset("hugo.toml", h.configFile)
 	if err != nil {
 		slog.Error("copy config fail", err)
 		return
@@ -125,13 +127,13 @@ func (h *_hugo) NewSite() {
 	}
 
 	// copy theme zip file
-	themeCopyDstPath := path.Join(AppHome, "themes.zip")
-	err = CopyAsset("themes.zip", themeCopyDstPath)
+	themeCopyDstPath := path.Join(backend.AppHome, "themes.zip")
+	err = util.CopyAsset("themes.zip", themeCopyDstPath)
 	if err != nil {
 		slog.Error("copy themes.zip fail", err)
 	}
 	// unzip
-	err = UnZip(themeCopyDstPath, h.SitePath)
+	err = util.UnZip(themeCopyDstPath, h.SitePath)
 	if err != nil {
 		slog.Error("unzip themes file fail", err)
 		return
@@ -229,7 +231,7 @@ func (h *_hugo) WriteArticle(aid string, meta Meta, content string) error {
 	} else {
 		// common article file
 		adir := path.Join(h.articleDir, aid)
-		if e, _ := PathExists(adir); !e {
+		if e, _ := util.PathExists(adir); !e {
 			err = os.MkdirAll(adir, os.ModePerm)
 			if err != nil {
 				return err

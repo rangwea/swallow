@@ -1,16 +1,18 @@
-package backend
+package hugo
 
 import (
 	"fmt"
+	"github.com/rangwea/swallows/backend"
+	"github.com/rangwea/swallows/backend/util"
 	"log"
 	"os"
 	"testing"
 )
 
 func before() {
-	AppHome = ""
-	if e, _ := PathExists(AppHome); !e {
-		if err := os.Mkdir(AppHome, os.ModePerm); err != nil {
+	backend.AppHome = ""
+	if e, _ := util.PathExists(backend.AppHome); !e {
+		if err := os.Mkdir(backend.AppHome, os.ModePerm); err != nil {
 			log.Fatal("make app home dir fail", err)
 		}
 	}

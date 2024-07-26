@@ -2,6 +2,7 @@ package backend
 
 import (
 	"fmt"
+	"github.com/rangwea/swallows/backend/hugo"
 	"golang.org/x/exp/slog"
 	"net/http"
 	"os"
@@ -23,7 +24,7 @@ func (h *FileLoader) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	var readFilePath string
 	if strings.HasPrefix(req.URL.Path, "/static/images") {
 		// site image
-		readFilePath = path.Join(Hugo.SitePath, req.URL.Path)
+		readFilePath = path.Join(hugo.Hugo.SitePath, req.URL.Path)
 	}
 
 	if readFilePath == "" {
