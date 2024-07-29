@@ -3,13 +3,15 @@ package deploy
 import (
 	"context"
 	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 	netlify "github.com/netlify/open-api/go/porcelain"
-	pc "github.com/netlify/open-api/go/porcelain/context"
+	nc "github.com/netlify/open-api/go/porcelain/context"
 	"reflect"
 )
 
 type Netlify struct {
 	SiteId string `json:"siteId"`
+	Token  string `json:"token"`
 }
 
 type NetlifyDeployer struct {
@@ -18,11 +20,17 @@ type NetlifyDeployer struct {
 func (d *NetlifyDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 	c := ci.(Netlify)
 
-	netlify.
-
 	client := netlify.Default
-	pc.WithAuthInfo(context.Background(), &runtime.ClientAuthInfoWriter{})
-	_, err = client.DeploySite(context.Background(), netlify.DeployOptions{
+	authInfoWriter := runtime.ClientAuthInfoWriterFunc(func(r runtime.ClientRequest,
+		_ strfmt.Registry) error {
+		err := r.SetHeaderParam("Authorization", "Bearer "+c.Token)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	ctx := nc.WithAuthInfo(context.Background(), authInfoWriter)
+	_, err = client.DeploySite(ctx, netlify.DeployOptions{
 		SiteID: c.SiteId,
 		Dir:    publicDir,
 	})

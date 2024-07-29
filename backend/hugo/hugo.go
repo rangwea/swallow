@@ -280,11 +280,11 @@ func (h *_hugo) DeleteArticle(aid string) error {
 	return nil
 }
 
-func (h *_hugo) getArticleImageDir(aid string) string {
+func (h *_hugo) GetArticleImageDir(aid string) string {
 	return path.Join(h.SitePath, "/static/images", aid)
 }
 
-func (h *_hugo) genArticleImagePath(aid string) (localPath string, sitePath string) {
+func (h *_hugo) GenArticleImagePath(aid string) (localPath string, sitePath string) {
 	filename := strconv.FormatInt(time.Now().UnixNano(), 10) + ".png"
 	sitePath = path.Join("/static/images", aid, filename)
 	localPath = path.Join(h.SitePath, sitePath)

@@ -208,10 +208,10 @@ func (a *App) ArticleInsertImage(aid string) *R {
 		return fail(err)
 	}
 
-	imageDir := hugo.Hugo.getArticleImageDir(aid)
+	imageDir := hugo.Hugo.GetArticleImageDir(aid)
 	os.Mkdir(imageDir, os.ModePerm)
 
-	localPath, sitePath := hugo.Hugo.genArticleImagePath(aid)
+	localPath, sitePath := hugo.Hugo.GenArticleImagePath(aid)
 	err = util.CopyFile(selection, localPath)
 	if err != nil {
 		return fail(err)
@@ -228,10 +228,10 @@ func (a *App) ArticleInsertImageBlob(aid int, blob string) *R {
 
 	aida := strconv.Itoa(aid)
 
-	imageDir := hugo.Hugo.getArticleImageDir(aida)
+	imageDir := hugo.Hugo.GetArticleImageDir(aida)
 	os.Mkdir(imageDir, os.ModePerm)
 
-	localPath, sitePath := hugo.Hugo.genArticleImagePath(aida)
+	localPath, sitePath := hugo.Hugo.GenArticleImagePath(aida)
 	err := os.WriteFile(localPath, file, os.ModePerm)
 	if err != nil {
 		return fail(err)
