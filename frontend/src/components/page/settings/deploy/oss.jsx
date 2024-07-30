@@ -15,10 +15,10 @@ import { Input } from "@/components/ui/input";
 import { ConfSave, ConfGet } from "/wailsjs/go/backend/App";
 import { checkResult, isSuccess } from "@/components/page/util";
 
-function GitSetting() {
+function OssSetting() {
   const form = useForm();
 
-  const confType = "github";
+  const confType = "oss";
 
   useEffect(() => {
     init();
@@ -43,80 +43,78 @@ function GitSetting() {
   return (
     <div className="space-y-6 px-2">
       <div>
-        <h3 className="text-lg font-medium">Github page</h3>
-        <p className="text-sm text-muted-foreground">
-          Deploy site with github.
-        </p>
+        <h3 className="text-lg font-medium">Account</h3>
+        <p className="text-sm text-muted-foreground">Deploy site with cos.</p>
       </div>
       <Separator />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
-            name="repository"
+            name="appId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Repository</FormLabel>
+                <FormLabel>AppId</FormLabel>
                 <FormControl>
-                  <Input placeholder="Repository" {...field} />
+                  <Input placeholder="AppId" {...field} />
                 </FormControl>
-                <FormDescription>Your github repository url</FormDescription>
+                <FormDescription>Your cos app id</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
           ></FormField>
           <FormField
             control={form.control}
-            name="email"
+            name="secretId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>SecretId</FormLabel>
                 <FormControl>
-                  <Input placeholder="email" {...field} />
+                  <Input placeholder="SecretId" {...field} />
                 </FormControl>
-                <FormDescription>Your email for github</FormDescription>
+                <FormDescription>Your SecretId for cos</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
           ></FormField>
           <FormField
             control={form.control}
-            name="username"
+            name="secretKey"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <FormLabel>SecretKey</FormLabel>
                 <FormControl>
-                  <Input placeholder="username" {...field} />
+                  <Input placeholder="SecretKey" {...field} />
                 </FormControl>
-                <FormDescription>Your username for github</FormDescription>
+                <FormDescription>Your SecretKey for cos</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
           ></FormField>
           <FormField
             control={form.control}
-            name="token"
+            name="region"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Token</FormLabel>
+                <FormLabel>Region</FormLabel>
                 <FormControl>
-                  <Input placeholder="token" {...field} />
+                  <Input placeholder="Region" {...field} />
                 </FormControl>
-                <FormDescription>Your token for github</FormDescription>
+                <FormDescription>Your Region for cos</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
           ></FormField>
           <FormField
             control={form.control}
-            name="cname"
+            name="bucket"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>CNAME</FormLabel>
+                <FormLabel>Bucket</FormLabel>
                 <FormControl>
-                  <Input placeholder="cname" {...field} />
+                  <Input placeholder="Bucket" {...field} />
                 </FormControl>
-                <FormDescription>Your cname for gitpage</FormDescription>
+                <FormDescription>Your Bucket for cos</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -128,4 +126,4 @@ function GitSetting() {
   );
 }
 
-export default GitSetting;
+export default OssSetting;

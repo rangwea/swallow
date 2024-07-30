@@ -42,5 +42,5 @@ func (d *NetlifyDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 }
 
 func (d *NetlifyDeployer) ConfType() reflect.Type {
-	return reflect.TypeOf(Github{})
+	return reflect.TypeOf(Netlify{})
 }

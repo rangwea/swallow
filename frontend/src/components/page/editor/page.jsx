@@ -11,7 +11,7 @@ import {
   ArticleInsertImage,
   ArticleInsertImageBlob,
 } from "/wailsjs/go/backend/App";
-import { getCurrentTime } from "../util";
+import { getCurrentTime, isSuccess } from "../util";
 import "../style.css";
 import {
   Drawer,
@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { TagInput } from "emblor";
+import { Toaster } from "@/components/ui/sonner";
+import { ifSuccess, checkError, checkResult } from "@/components/page/util";
 
 function EditorPage() {
   const [params] = useSearchParams();
@@ -63,8 +65,7 @@ function EditorPage() {
     if (id) {
       // existed id，edit
       ArticleGet(id).then((result) => {
-        if (result.code !== 1) {
-          // todo message
+        if (!isSuccess(r)) {
           return;
         }
         let meta = result.data.meta;
@@ -89,14 +90,9 @@ function EditorPage() {
   function save(e) {
     let meta = getMeta();
     ArticleSave(id, meta, content).then((r) => {
-      if (r.code === 1) {
-        // success
+      if (isSuccess(r)) {
         setId(r.data);
-        // todo message
         setChanged(false);
-      } else {
-        // fail
-        // todo msg
       }
     });
   }
@@ -115,7 +111,7 @@ function EditorPage() {
   }
 
   function insertImageTextToArea(r) {
-    if (r.code === 1) {
+    if (isSuccess(r)) {
       const md = insertToTextArea(`![](${r.data})\n`);
       setContent(md);
     }
@@ -189,6 +185,7 @@ function EditorPage() {
   return (
     <Drawer direction="right">
       <div className="flex flex-col h-screen space-y-1">
+        <Toaster position="top-center" />
         <div
           className="flex justify-end w-full space-x-2 border-b pr-4 shadow-none"
           style={{ "--wails-draggable": "drag" }}
@@ -212,6 +209,7 @@ function EditorPage() {
             <input
               className="border-0 border-none shadow-none ring-0 focus:ring-0 h-10 text-lg py-1 px-2 editor-title-input"
               placeholder="Title..."
+              value={title}
               onChange={titleChange}
             ></input>
             <MDEditor
@@ -244,7 +242,7 @@ function EditorPage() {
           <div className="fixed top-1/2 right-1 transform -translate-y-1/2 h-[100px] flex flex-col space-y-1">
             <ToolBtn icon="Image" onClick={insertImage}></ToolBtn>
             <ToolBtn icon={previewIcon} onClick={previewToggle}></ToolBtn>
-            <DrawerTrigger>
+            <DrawerTrigger variant="ghost" size="icon" className="w-8 h-8">
               <ToolBtn icon="Settings"></ToolBtn>
             </DrawerTrigger>
           </div>

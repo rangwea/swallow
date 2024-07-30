@@ -67,5 +67,5 @@ func (d *CosDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 }
 
 func (d *CosDeployer) ConfType() reflect.Type {
-	return reflect.TypeOf(Github{})
+	return reflect.TypeOf(Cos{})
 }

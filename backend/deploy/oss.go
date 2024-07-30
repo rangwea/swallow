@@ -35,7 +35,8 @@ func (d *OssDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 
 	remoteFiles := make(map[string]*string)
 	for p.HasNext() {
-		page, err := p.NextPage(context.Background())
+		var page *oss.ListObjectsV2Result
+		page, err = p.NextPage(context.Background())
 		if err != nil {
 			return
 		}
@@ -73,5 +74,5 @@ func (d *OssDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 }
 
 func (d *OssDeployer) ConfType() reflect.Type {
-	return reflect.TypeOf(Github{})
+	return reflect.TypeOf(Oss{})
 }

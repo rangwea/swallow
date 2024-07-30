@@ -15,12 +15,18 @@ type deployer interface {
 }
 
 const (
-	GITHUB ConfType = "github"
+	GITHUB  ConfType = "github"
+	COS     ConfType = "cos"
+	OSS     ConfType = "oss"
+	Netlify ConfType = "netlify"
 )
 
 // all deployers
 var deployers = map[ConfType]deployer{
-	GITHUB: &deploy.GitDeployer{},
+	GITHUB:  &deploy.GitDeployer{},
+	COS:     &deploy.CosDeployer{},
+	OSS:     &deploy.OssDeployer{},
+	Netlify: &deploy.NetlifyDeployer{},
 }
 
 type _deployers struct {

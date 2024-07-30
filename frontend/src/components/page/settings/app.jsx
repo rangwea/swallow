@@ -1,14 +1,19 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator"
-import { useState } from "react";
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
 
 function AppSetting() {
+  const click = () => {
+    console.log("aaa")
+    toast("hhhhh")
+  }
 
   return (
     <>
       <div>
-        app settings
+      <Toaster/>
+      <Button onClick={click}>Submit</Button>
       </div>
     </>
   );

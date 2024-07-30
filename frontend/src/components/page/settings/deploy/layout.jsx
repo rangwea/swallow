@@ -1,17 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GitSetting from "@/components/page/settings/deploy/git";
+import CosSetting from "@/components/page/settings/deploy/cos";
+import OssSetting from "@/components/page/settings/deploy/oss";
+import NetlifySetting from "@/components/page/settings/deploy/netlify";
+import {
+  ConfGet,
+} from "/wailsjs/go/backend/App";
 
 function DeploySetting() {
+  const [activedDeploy, setActivedDeploy] = useState("github")
+
+  useEffect(() => {
+    init();
+  }, []);
+
+  function init() {
+    ConfGet('app').then((result) => {
+      if (result.code === 0) {
+        message.error("get app config fail:" + result.msg);
+      } else {
+        const data = result.data;
+        setActivedDeploy(data['activedDeploy'])
+      }
+    });
+  }
+
   return (
     <>
-      <Tabs defaultValue="github">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="github">Account</TabsTrigger>
-          <TabsTrigger value="password">Password</TabsTrigger>
+      <Tabs defaultValue={activedDeploy}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="github">github</TabsTrigger>
+          <TabsTrigger value="cos">cos</TabsTrigger>
+          <TabsTrigger value="oss">oss</TabsTrigger>
+          <TabsTrigger value="netlify">netlify</TabsTrigger>
         </TabsList>
         <TabsContent value="github">{<GitSetting />}</TabsContent>
-        <TabsContent value="password"></TabsContent>
+        <TabsContent value="cos">{<CosSetting />}</TabsContent>
+        <TabsContent value="oss">{<OssSetting />}</TabsContent>
+        <TabsContent value="netlify">{<NetlifySetting />}</TabsContent>
       </Tabs>
     </>
   );

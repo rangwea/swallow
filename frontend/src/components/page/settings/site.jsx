@@ -24,6 +24,12 @@ import {
   SiteConfigSave,
   ConfGetThemes,
 } from "/wailsjs/go/backend/App";
+import {
+  ifSuccess,
+  checkError,
+  checkResult,
+  isSuccess,
+} from "@/components/page/util";
 
 function SiteSetting() {
   const form = useForm();
@@ -38,9 +44,7 @@ function SiteSetting() {
     getThemes();
     // init form
     SiteConfigGet().then((result) => {
-      if (result.code === 0) {
-        message.error("get website config fail:" + result.msg);
-      } else {
+      if (isSuccess(result)) {
         const data = result.data;
         for (var k in data) {
           form.setValue(k, data[k]);
@@ -50,24 +54,11 @@ function SiteSetting() {
   }
 
   const getThemes = () => {
-    ConfGetThemes().then((result) => {
-      if (result.code === 0) {
-        message.error("get themes fail:" + result.msg);
-      } else {
-        setThemeOptions(result.data);
-      }
-      console.log(themeOptions);
-    });
+    ConfGetThemes().then((result) => ifSuccess(setThemeOptions));
   };
 
   function onSubmit(values) {
-    SiteConfigSave(values).then((r) => {
-      if (r.code === 0) {
-        message.error(r.msg);
-      } else {
-        message.info("save success", 1);
-      }
-    });
+    SiteConfigSave(values).then((r) => checkResult(r, "save success"));
   }
 
   return (

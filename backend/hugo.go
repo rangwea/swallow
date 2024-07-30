@@ -1,9 +1,8 @@
-package hugo
+package backend
 
 import (
 	"bufio"
 	"bytes"
-	"github.com/rangwea/swallows/backend"
 	"github.com/rangwea/swallows/backend/util"
 	"net/http"
 	"os"
@@ -74,8 +73,8 @@ type ConfigAuthor struct {
 
 func (h *_hugo) Initialize() {
 	slog.Info("init hugo start")
-	h.hugo = path.Join(backend.AppHome, "hugo")
-	h.SitePath = path.Join(backend.AppHome, "site")
+	h.hugo = path.Join(AppHome, "hugo")
+	h.SitePath = path.Join(AppHome, "site")
 	h.articleDir = path.Join(h.SitePath, "content", "post")
 	h.articleImgDir = path.Join(h.articleDir, "images")
 	h.ImageDir = path.Join(h.SitePath, "static", "images")
@@ -127,7 +126,7 @@ func (h *_hugo) NewSite() {
 	}
 
 	// copy theme zip file
-	themeCopyDstPath := path.Join(backend.AppHome, "themes.zip")
+	themeCopyDstPath := path.Join(AppHome, "themes.zip")
 	err = util.CopyAsset("themes.zip", themeCopyDstPath)
 	if err != nil {
 		slog.Error("copy themes.zip fail", err)

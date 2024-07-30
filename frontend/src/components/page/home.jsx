@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -28,6 +28,7 @@ import {
   SitePreview,
   SiteDeploy,
 } from "/wailsjs/go/backend/App";
+import { ifSuccess, isSuccess, checkError, checkResult } from "@/components/page/util";
 
 function Home() {
   const [articles, setArticles] = useState([]);
@@ -35,45 +36,33 @@ function Home() {
   const [deleteBtnShow, setDeleteBtnShow] = useState(false);
 
   function searchArticles(e) {
-    if (e.key === "Enter") {
-      ArticleList(e.target.value).then((result) => {
-        setArticles(result.data);
-        e.preventDefault();
-      });
+    if (e === "" || e.key === "Enter") {
+      let text = e === "" ? e : e.target.value;
+      ArticleList(text).then((r) => ifSuccess(r, setArticles));
     }
   }
 
   useEffect(() => {
-    searchArticles("", null);
+    searchArticles("");
   }, []);
 
   function preview() {
-    SitePreview().then((r) => {
-      if (r.code !== 1) {
-        message.error(r.msg);
-      }
-    });
+    SitePreview().then(checkError);
   }
 
   function deploy() {
-    SiteDeploy().then((r) => {
-      if (r.code !== 1) {
-        message.error(r.msg);
-      }
-    });
+    SiteDeploy().then((r) => checkResult(r, "deploy success"));
   }
 
   function removeArticle() {
     if (checked.length > 0) {
       ArticleRemove(checked).then((r) => {
-        if (r.code === 1) {
-          message.info(`removed ${checked.length} articles`, 2);
+        if (isSuccess(r)) {
+          toast.info(`removed ${checked.length} articles`, 2);
           searchArticles("", null);
           setChecked([]);
           setDeleteBtnShow(false);
-        } else {
-          message.error(r.msg);
-        }
+        } 
       });
     }
   }
@@ -92,7 +81,12 @@ function Home() {
   const IBtn = ({ icon, onClick }) => {
     const LucideIcon = icons[icon];
     return (
-      <Button className="m-1 w-8 h-8" variant="ghost" size="icon" onClick={onClick}>
+      <Button
+        className="m-1 w-8 h-8"
+        variant="ghost"
+        size="icon"
+        onClick={onClick}
+      >
         <LucideIcon size="20" color="#676565" strokeWidth={1.5} />
       </Button>
     );
@@ -101,6 +95,7 @@ function Home() {
   return (
     <>
       <div className="h-screen">
+        <Toaster position="top-center" />
         <div
           className="flex items-center pt-10 px-16"
           style={{ "--wails-draggable": "drag" }}
@@ -160,7 +155,7 @@ function Home() {
                       />
                     </TableCell>
                     <TableCell className="text-lg">
-                      <Link to="/editor?id=1">{item.title}</Link>
+                      <Link to={"/editor?id=" + item.id}>{item.title}</Link>
                     </TableCell>
                     <TableCell>{item.createTime}</TableCell>
                     <TableCell className="text-right">{item.tags}</TableCell>

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { CircleX } from "lucide-react";
 import "../style.css";
 import DeploySetting from "@/components/page/settings/deploy/layout";
+import { Toaster } from "@/components/ui/sonner"
 
 function SettingsPage() {
   const [panel, setPanel] = useState("");
@@ -36,6 +37,7 @@ function SettingsPage() {
 
   return (
     <div className="mx-10 h-screen">
+      <Toaster position="top-center"/>
       <div
         className="space-y-0.5 pt-10"
         style={{ "--wails-draggable": "drag" }}
