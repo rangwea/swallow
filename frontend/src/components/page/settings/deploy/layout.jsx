@@ -4,30 +4,31 @@ import GitSetting from "@/components/page/settings/deploy/git";
 import CosSetting from "@/components/page/settings/deploy/cos";
 import OssSetting from "@/components/page/settings/deploy/oss";
 import NetlifySetting from "@/components/page/settings/deploy/netlify";
-import {
-  ConfGet,
-} from "/wailsjs/go/backend/App";
+import { ConfGet } from "/wailsjs/go/backend/App";
+import { Toaster } from "@/components/ui/sonner";
+import { isSuccess } from "@/components/page/util";
 
 function DeploySetting() {
-  const [activedDeploy, setActivedDeploy] = useState("github")
+  const [activedDeploy, setActivedDeploy] = useState("github");
 
   useEffect(() => {
     init();
   }, []);
 
   function init() {
-    ConfGet('app').then((result) => {
-      if (result.code === 0) {
-        message.error("get app config fail:" + result.msg);
-      } else {
+    ConfGet("app").then((result) => {
+      if (isSuccess(result)) {
         const data = result.data;
-        setActivedDeploy(data['activedDeploy'])
+        if (data && data.activedDeploy) {
+          setActivedDeploy();
+        }
       }
     });
   }
 
   return (
     <>
+      <Toaster position="top-center" />
       <Tabs defaultValue={activedDeploy}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="github">github</TabsTrigger>

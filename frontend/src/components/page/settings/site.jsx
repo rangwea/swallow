@@ -23,17 +23,22 @@ import {
   SiteConfigGet,
   SiteConfigSave,
   ConfGetThemes,
+  GetSiteImageConf,
+  SelectConfImage,
 } from "/wailsjs/go/backend/App";
 import {
   ifSuccess,
-  checkError,
   checkResult,
   isSuccess,
+  checkError,
 } from "@/components/page/util";
+import { ImageUp } from "lucide-react";
 
 function SiteSetting() {
   const form = useForm();
   const [themeOptions, setThemeOptions] = useState([]);
+  const [avatar, setAvatar] = useState("");
+  const [favicon, setFavicon] = useState("");
 
   useEffect(() => {
     init();
@@ -42,6 +47,8 @@ function SiteSetting() {
   function init() {
     // get themes
     getThemes();
+    // get site image config
+    getSiteImage();
     // init form
     SiteConfigGet().then((result) => {
       if (isSuccess(result)) {
@@ -54,12 +61,59 @@ function SiteSetting() {
   }
 
   const getThemes = () => {
-    ConfGetThemes().then((result) => ifSuccess(setThemeOptions));
+    ConfGetThemes().then((r) => ifSuccess(r, setThemeOptions));
+  };
+
+  const getSiteImage = () => {
+    GetSiteImageConf().then((r) => {
+      if (isSuccess(r)) {
+        setAvatar(r.avatar);
+        setFavicon(r.favicon);
+      }
+    });
+  };
+
+  const setSiteImage = (s) => {
+    SelectConfImage(s).then(checkError);
+    getSiteImage();
   };
 
   function onSubmit(values) {
     SiteConfigSave(values).then((r) => checkResult(r, "save success"));
   }
+
+  const SiteImageInput = (props) => {
+    const { label, type } = props;
+    return (
+      <div className="space-y-2">
+        <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          {label}
+        </label>
+        <div class="flex flex-col w-32 h-32 border-2 border-dashed hover:bg-gray-100 hover:border-gray-300">
+          <div
+            class="relative flex flex-col items-center justify-center pt-8"
+            onClick={() => setSiteImage(type)}
+          >
+            {avatar ? (
+              <img
+                id="avatarPreview"
+                class="absolute inset-0 w-full h-32 block"
+                src="static/images/avatar.png"
+              />
+            ) : (
+              <>
+                <ImageUp color="#a1a1a1" />
+                <p class="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
+                  select a image
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+        <p class="text-sm text-muted-foreground">select a image for {label}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6 px-2">
@@ -106,10 +160,19 @@ function SiteSetting() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Theme</FormLabel>
-                <Select {...field} onValueChange={field.onChange}>
+                <Select
+                  {...field}
+                  onValueChange={field.onChange}
+                  value={field.value ? field.value : "mini"}
+                  name={field.name}
+                >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Theme" />
+                      <SelectValue
+                        placeholder="Theme"
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -187,6 +250,24 @@ function SiteSetting() {
               </FormItem>
             )}
           ></FormField>
+          <FormField
+            control={form.control}
+            name="params.author.name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Author</FormLabel>
+                <FormControl>
+                  <Input placeholder="swallow" {...field} />
+                </FormControl>
+                <FormDescription>
+                  select your website description
+                </FormDescription>
+                <FormMessage></FormMessage>
+              </FormItem>
+            )}
+          ></FormField>
+          <SiteImageInput label="Avatar" type="avatar.png" />
+          <SiteImageInput label="Favicon" type="favicon.ico" />
           <Button type="submit">Submit</Button>
         </form>
       </Form>

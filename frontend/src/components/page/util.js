@@ -33,7 +33,7 @@ export function formatDateTime(value) {
 }
 
 export function ifSuccess(r, fn) {
-  if (r.code === 1) {
+  if (r.code == 1) {
     fn(r.data);
   } else {
     toast.error(r.msg);
@@ -41,7 +41,7 @@ export function ifSuccess(r, fn) {
 }
 
 export function isSuccess(r) {
-  if (r.code === 1) {
+  if (r.code == 1) {
     return true;
   } else {
     toast.error(r.msg);

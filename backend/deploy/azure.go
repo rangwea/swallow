@@ -2,52 +2,61 @@ package deploy
 
 import (
 	"context"
+	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blockblob"
 	"github.com/rangwea/swallows/backend/util"
-	"github.com/tencentyun/cos-go-sdk-v5"
-	"net/http"
-	"net/url"
+	"os"
 	"reflect"
 )
 
-type Cos struct {
-	AppId     string `json:"appId"`
-	SecretId  string `json:"secretId"`
-	SecretKey string `json:"secretKey"`
-	Region    string `json:"region"`
-	Bucket    string `json:"bucket"`
+type Azure struct {
+	Account     string `json:"account"`
+	AccessToken string `json:"accessToken"`
+	Container   string `json:"container"`
 }
 
-type CosDeployer struct {
+type AzureDeployer struct {
 }
 
-func (d *CosDeployer) Deploy(publicDir string, ci interface{}) (err error) {
-	c := ci.(Cos)
-	u, err := url.Parse("https://" + c.Bucket + ".cos." + c.Region + ".myqcloud.com/")
-	b := &cos.BaseURL{BucketURL: u}
-	client := cos.NewClient(b, &http.Client{
-		Transport: &cos.AuthorizationTransport{
-			SecretID:  c.SecretId,
-			SecretKey: c.SecretKey,
-		}})
+func (d *AzureDeployer) Deploy(publicDir string, ci interface{}) (err error) {
+	c := ci.(Azure)
 
-	v, _, err := client.Bucket.Get(context.Background(), &cos.BucketGetOptions{})
+	url := fmt.Sprintf("https://%s.blob.core.windows.net/?%s", c.Account, c.AccessToken)
+
+	client, err := azblob.NewClientWithNoCredential(url, nil)
 	if err != nil {
-		return
+		return err
 	}
 
-	remoteFiles := make(map[string]string)
-	for _, item := range v.Contents {
-		remoteFiles[item.Key] = item.ETag
+	remoteFiles := make(map[string]*string)
+	pager := client.NewListBlobsFlatPager(c.Container, nil)
+	for pager.More() {
+		var resp azblob.ListBlobsFlatResponse
+		resp, err = pager.NextPage(context.Background())
+		if err != nil {
+			return err
+		}
+		for _, blob := range resp.Segment.BlobItems {
+			remoteFiles[*blob.Name] = blob.Metadata["md5"]
+		}
 	}
 
-	localFiles, err := util.GetLocalFilesCRC64(publicDir)
+	localFiles, err := util.GetLocalFilesMD5(publicDir)
 	if err != nil {
 		return
 	}
 
 	for k, v := range localFiles {
-		if remoteFiles[k] != v {
-			_, err = client.Object.PutFromFile(context.Background(), k, k, nil)
+		if *remoteFiles[k] != v {
+			var f *os.File
+			f, err = os.Open(k)
+			if err != nil {
+				return
+			}
+			_, err = client.UploadFile(context.Background(), c.Container, k, f, &blockblob.UploadFileOptions{
+				Metadata: map[string]*string{"md5": &v},
+			})
 			if err != nil {
 				return
 			}
@@ -56,7 +65,7 @@ func (d *CosDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 
 	for k := range remoteFiles {
 		if _, ok := localFiles[k]; !ok {
-			_, err = client.Object.Delete(context.Background(), k)
+			_, err = client.DeleteBlob(context.Background(), c.Container, k, nil)
 			if err != nil {
 				return
 			}
@@ -66,6 +75,6 @@ func (d *CosDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 	return
 }
 
-func (d *CosDeployer) ConfType() reflect.Type {
+func (d *AzureDeployer) ConfType() reflect.Type {
 	return reflect.TypeOf(Cos{})
 }

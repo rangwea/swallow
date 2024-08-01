@@ -1,8 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
-import AppSetting from "@/components/page/settings/app";
 import SiteSetting from "@/components/page/settings/site";
 import { cn } from "@/lib/utils";
 import { CircleX } from "lucide-react";
@@ -58,8 +57,7 @@ function SettingsPage() {
       </div>
       <Separator className="my-6" />
       <div className="flex flex-row space-x-5 overflow-hidden">
-        <nav className="flex flex-col text-sm text-muted-foreground w-40">
-          <NavItem text="General" to={<AppSetting />} />
+        <nav className="flex flex-col text-sm text-muted-foreground w-40 space-y-2">
           <NavItem text="Theme" to={<SiteSetting />} />
           <NavItem text="Deploy" to={<DeploySetting />} />
         </nav>

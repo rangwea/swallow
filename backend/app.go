@@ -98,6 +98,8 @@ type AppConf struct {
 
 const confTypeApp ConfType = "app"
 
+const SiteImagePath = "/static/images"
+
 func (a *App) SitePreview() *R {
 	err := Hugo.Preview()
 	if err != nil {
@@ -292,7 +294,7 @@ func (a *App) ConfGetThemes() *R {
 	return success(ts)
 }
 
-func (a *App) SelectConfImage(imgPath string) *R {
+func (a *App) SelectConfImage(img string) *R {
 	selection, err := rt.OpenFileDialog(a.ctx, rt.OpenDialogOptions{
 		Title: "Select Image",
 		Filters: []rt.FileFilter{
@@ -306,17 +308,35 @@ func (a *App) SelectConfImage(imgPath string) *R {
 		return fail(err)
 	}
 
-	p := path.Join(Hugo.SitePath, imgPath)
+	p := path.Join(Hugo.ImageDir, img)
 	// remove old
 	os.Remove(p)
 
 	// copy conf image
-	err = util.CopyAsset(selection, p)
+	err = util.CopyFile(selection, p)
 	if err != nil {
 		return fail(err)
 	}
 
 	return success(nil)
+}
+
+func (a *App) GetSiteImageConf(imgPath string) *R {
+	avatar := ""
+	_, err := os.Stat(Hugo.ImageDir + "/avatar.png")
+	if !os.IsNotExist(err) {
+		avatar = SiteImagePath + "/avatar.png"
+	}
+
+	favicon := ""
+	_, err = os.Stat(Hugo.ImageDir + "/favicon.ico")
+	if !os.IsNotExist(err) {
+		favicon = SiteImagePath + "/favicon.ico"
+	}
+	return success(map[string]string{
+		"avatar":  avatar,
+		"favicon": favicon,
+	})
 }
 
 func saveArticleToDB(aidpr *string, meta Meta) error {

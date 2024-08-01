@@ -11,7 +11,6 @@ import {
   ArticleInsertImage,
   ArticleInsertImageBlob,
 } from "/wailsjs/go/backend/App";
-import { getCurrentTime, isSuccess } from "../util";
 import "../style.css";
 import {
   Drawer,
@@ -31,7 +30,7 @@ import {
 import { useForm } from "react-hook-form";
 import { TagInput } from "emblor";
 import { Toaster } from "@/components/ui/sonner";
-import { ifSuccess, checkError, checkResult } from "@/components/page/util";
+import { getCurrentTime, isSuccess } from "@/components/page/util";
 
 function EditorPage() {
   const [params] = useSearchParams();
@@ -40,9 +39,6 @@ function EditorPage() {
   // article vars
   const [title, setTitle] = useState(); // title
   const [content, setContent] = useState(""); // content
-
-  // config vars
-  const [drawerOpen, setDrawerOpen] = useState(false); // open config drawer?
 
   // preview button vars
   const [preview, setPreview] = useState("edit");
@@ -65,18 +61,20 @@ function EditorPage() {
     if (id) {
       // existed id，edit
       ArticleGet(id).then((result) => {
-        if (!isSuccess(r)) {
+        if (!isSuccess(result)) {
           return;
         }
         let meta = result.data.meta;
         setTitle(meta.title);
         setContent(result.data.content);
-        form.setValue(
-          "tags",
-          meta.tags.map((e) => {
-            text: e;
-          })
-        );
+        if (meta.tags) {
+          form.setValue(
+            "tags",
+            meta.tags.map((e) => {
+              text: e;
+            })
+          );
+        }
         form.setValue("date", meta.date);
         form.setValue("lastmod", meta.lastmod);
       });
@@ -100,7 +98,9 @@ function EditorPage() {
   function getMeta() {
     let meta = form.getValues();
     meta["title"] = title;
-    meta["tags"] = meta["tags"].map((e) => e.text);
+    if (meta["tags"]) {
+      meta["tags"] = meta["tags"].map((e) => e.text);
+    }
     return meta;
   }
 

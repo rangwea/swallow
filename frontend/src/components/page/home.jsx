@@ -28,7 +28,12 @@ import {
   SitePreview,
   SiteDeploy,
 } from "/wailsjs/go/backend/App";
-import { ifSuccess, isSuccess, checkError, checkResult } from "@/components/page/util";
+import {
+  ifSuccess,
+  isSuccess,
+  checkError,
+  checkResult,
+} from "@/components/page/util";
 
 function Home() {
   const [articles, setArticles] = useState([]);
@@ -62,7 +67,7 @@ function Home() {
           searchArticles("", null);
           setChecked([]);
           setDeleteBtnShow(false);
-        } 
+        }
       });
     }
   }
@@ -151,7 +156,7 @@ function Home() {
                   <TableRow key={item.id}>
                     <TableCell>
                       <Checkbox
-                        onCheckedChange={(e) => checkedChange(e, item.id)}
+                        onCheckedChange={(e) => checkedChange(e, item.id + "")}
                       />
                     </TableCell>
                     <TableCell className="text-lg">
