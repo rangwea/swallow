@@ -3,11 +3,12 @@ package deploy
 import (
 	"context"
 	"fmt"
+	"os"
+	"reflect"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blockblob"
 	"github.com/rangwea/swallows/backend/util"
-	"os"
-	"reflect"
 )
 
 type Azure struct {
@@ -54,6 +55,7 @@ func (d *AzureDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 			if err != nil {
 				return
 			}
+			defer f.Close()
 			_, err = client.UploadFile(context.Background(), c.Container, k, f, &blockblob.UploadFileOptions{
 				Metadata: map[string]*string{"md5": &v},
 			})
