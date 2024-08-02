@@ -1,8 +1,6 @@
 package util
 
 import (
-	"os/user"
-	"path"
 	"testing"
 )
 
@@ -14,12 +12,11 @@ func TestUnZip(t *testing.T) {
 }
 
 func TestGetLocalFilesCRC64(t *testing.T) {
-	u, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-	dir := path.Join(u.HomeDir, ".swallow", "site", "public")
+	dir := "/Users/feijianwu/Code/mine/swallow-wails2/backend/deploy/test"
 	r, err := GetLocalFilesCRC64(dir)
+	if err != nil {
+		println(err)
+	}
 	for k, v := range r {
 		println(k, v)
 	}

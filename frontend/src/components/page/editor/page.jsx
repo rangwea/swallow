@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, forwardRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { icons, Check, MoveLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,13 @@ import {
 } from "/wailsjs/go/backend/App";
 import "../style.css";
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import {
   Form,
   FormControl,
@@ -173,17 +173,18 @@ function EditorPage() {
     setChanged(true);
   }
 
-  const ToolBtn = ({ icon, onClick }) => {
+  const ToolBtn = forwardRef((props, ref) => {
+    const {icon, onClick} = props
     const LucideIcon = icons[icon];
     return (
       <Button variant="ghost" size="icon" className="w-8 h-8" onClick={onClick}>
         <LucideIcon size="18" color="#676565" strokeWidth={1.5} />
       </Button>
     );
-  };
+  });
 
   return (
-    <Drawer direction="right">
+    <Sheet key="right">
       <div className="flex flex-col h-screen space-y-1">
         <Toaster position="top-center" />
         <div
@@ -242,19 +243,19 @@ function EditorPage() {
           <div className="fixed top-1/2 right-1 transform -translate-y-1/2 h-[100px] flex flex-col space-y-1">
             <ToolBtn icon="Image" onClick={insertImage}></ToolBtn>
             <ToolBtn icon={previewIcon} onClick={previewToggle}></ToolBtn>
-            <DrawerTrigger variant="ghost" size="icon" className="w-8 h-8">
+            <SheetTrigger asChild>
               <ToolBtn icon="Settings"></ToolBtn>
-            </DrawerTrigger>
+            </SheetTrigger>
           </div>
         </div>
 
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Article Meta</DrawerTitle>
-          </DrawerHeader>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Article Meta</SheetTitle>
+          </SheetHeader>
           <Separator className="my-4" />
           <Form {...form}>
-            <form className="space-y-4 mx-5">
+            <form className="space-y-4">
               <FormField
                 control={form.control}
                 name="tags"
@@ -309,14 +310,9 @@ function EditorPage() {
               ></FormField>
             </form>
           </Form>
-          <DrawerClose className="mt-4">
-            <Button variant="outline" className="w-1/2">
-              Close
-            </Button>
-          </DrawerClose>
-        </DrawerContent>
+        </SheetContent>
       </div>
-    </Drawer>
+    </Sheet>
   );
 }
 

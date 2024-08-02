@@ -4,8 +4,6 @@ import (
 	"archive/zip"
 	"crypto/md5"
 	"fmt"
-	"github.com/rangwea/swallows/assets"
-	"golang.org/x/exp/slog"
 	"hash/crc64"
 	"io"
 	"os"
@@ -15,6 +13,9 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/rangwea/swallows/assets"
+	"golang.org/x/exp/slog"
 )
 
 var commands = map[string]string{
@@ -127,11 +128,11 @@ func UnZip(src string, dst string) error {
 
 func GetLocalFilesCRC64(base string) (r map[string]string, err error) {
 	r = make(map[string]string)
-	table := crc64.MakeTable(crc64.ISO)
 	err = filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+		table := crc64.MakeTable(crc64.ECMA)
 		if !info.IsDir() {
 			file, err := os.Open(path)
 			if err != nil {
@@ -144,7 +145,7 @@ func GetLocalFilesCRC64(base string) (r map[string]string, err error) {
 				return err
 			}
 			crc64Hash := hash.Sum64()
-			r[strings.Replace(path, base, "", -1)] = strconv.FormatUint(crc64Hash, 10)
+			r[strings.Replace(path, base, "", -1)[1:]] = strconv.FormatUint(crc64Hash, 10)
 		}
 		return nil
 	})
@@ -170,7 +171,7 @@ func GetLocalFilesMD5(base string) (r map[string]string, err error) {
 				return err
 			}
 			md5Hash := hash.Sum(nil)
-			r[strings.Replace(path, base, "", -1)] = string(md5Hash)
+			r[strings.Replace(path, base, "", -1)[1:]] = string(md5Hash)
 		}
 		return nil
 	})

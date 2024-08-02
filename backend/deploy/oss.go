@@ -1,59 +1,65 @@
 package deploy
 
 import (
-	"context"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
-	"github.com/rangwea/swallows/backend/util"
+	"path"
 	"reflect"
+
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/rangwea/swallows/backend/util"
 )
 
 type Oss struct {
-	AppId     string `json:"appId"`
-	SecretId  string `json:"secretId"`
-	SecretKey string `json:"secretKey"`
-	Region    string `json:"region"`
-	Bucket    string `json:"bucket"`
+	AccessKeyID     string `json:"secretId"`
+	AccessKeySecret string `json:"secretKey"`
+	Region          string `json:"region"`
+	Bucket          string `json:"bucket"`
 }
 
 type OssDeployer struct {
 }
 
 func (d *OssDeployer) Deploy(publicDir string, ci interface{}) (err error) {
-	c := ci.(Oss)
+	c := ci.(*Oss)
 
-	bucket := oss.Ptr(c.Bucket)
+	client, err := oss.New("oss-cn-hangzhou.aliyuncs.com", c.AccessKeyID, c.AccessKeySecret, oss.Region(c.Region))
+	if err != nil {
+		return
+	}
 
-	cfg := oss.LoadDefaultConfig().
-		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(c.SecretId, c.SecretKey)).
-		WithRegion(c.Region)
-	client := oss.NewClient(cfg)
+	bucket, err := client.Bucket(c.Bucket)
+	if err != nil {
+		return
+	}
 
-	p := client.NewListObjectsV2Paginator(&oss.ListObjectsV2Request{
-		Bucket: bucket,
-	})
-
-	remoteFiles := make(map[string]*string)
-	for p.HasNext() {
-		var page *oss.ListObjectsV2Result
-		page, err = p.NextPage(context.Background())
+	remoteFiles := make(map[string]string)
+	marker := ""
+	for {
+		lsRes, err := bucket.ListObjects(oss.Marker(marker))
 		if err != nil {
-			return
+			return err
 		}
-
-		for _, item := range page.Contents {
-			remoteFiles[*item.Key] = item.ETag
+		for _, item := range lsRes.Objects {
+			h, err := bucket.GetObjectDetailedMeta(item.Key)
+			if err != nil {
+				return nil
+			}
+			remoteFiles[item.Key] = h.Get("x-oss-hash-crc64ecma")
+		}
+		if lsRes.IsTruncated {
+			marker = lsRes.NextMarker
+		} else {
+			break
 		}
 	}
 
-	localFiles, err := util.GetLocalFilesMD5(publicDir)
+	localFiles, err := util.GetLocalFilesCRC64(publicDir)
 	if err != nil {
 		return
 	}
 
 	for k, v := range localFiles {
-		if *remoteFiles[k] != v {
-			_, err = client.PutObjectFromFile(context.Background(), &oss.PutObjectRequest{Bucket: bucket, Key: oss.Ptr(k)}, k, nil)
+		if remoteFiles[k] != v {
+			err = bucket.PutObjectFromFile(k, path.Join(publicDir, k))
 			if err != nil {
 				return
 			}
@@ -62,8 +68,7 @@ func (d *OssDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 
 	for k := range remoteFiles {
 		if _, ok := localFiles[k]; !ok {
-			_, err = client.DeleteObject(context.Background(), &oss.DeleteObjectRequest{Bucket: bucket,
-				Key: oss.Ptr(k)})
+			err = bucket.DeleteObject(k)
 			if err != nil {
 				return
 			}
