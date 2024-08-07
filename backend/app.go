@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/rangwea/swallows/backend/util"
 	"os"
 	"os/user"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/rangwea/swallows/backend/util"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -134,18 +135,34 @@ func (a *App) SiteDeploy() *R {
 	return success(nil)
 }
 
-func (a *App) ArticleList(search string) *R {
-	sql := "select * from t_article"
+func (a *App) ArticleList(search string, page int) *R {
+	where := ""
 	if search != "" {
-		sql += " where title like ? or tags like ?"
+		where += " where title like ? or tags like ?"
+		search = "%" + search + "%"
 	}
-	sql += " order by update_time desc"
-	search = "%" + search + "%"
-	r := []Article{}
-	err := DB.Select(&r, sql, search, search, search)
+
+	offset := page * 10
+	countSql := "select count(id) from t_article " + where
+	pageSql := "select * from t_article " + where + " order by update_time desc limit 10 offset " + strconv.Itoa(offset)
+
+	r := make(map[string]interface{})
+	count := 0
+	l := []Article{}
+	r["total"] = &count
+	r["list"] = &l
+
+	DB.Get(&count, countSql, search, search)
+
+	if count == 0 {
+		return success(r)
+	}
+
+	err := DB.Select(&l, pageSql, search, search)
 	if err != nil {
 		return fail(err)
 	}
+
 	return success(r)
 }
 

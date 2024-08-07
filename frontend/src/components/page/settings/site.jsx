@@ -86,31 +86,33 @@ function SiteSetting() {
     const { label, type } = props;
     return (
       <div className="space-y-2">
-        <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           {label}
         </label>
-        <div class="flex flex-col w-32 h-32 border-2 border-dashed hover:bg-gray-100 hover:border-gray-300">
+        <div className="flex flex-col w-32 h-32 border-2 border-dashed hover:bg-gray-100 hover:border-gray-300">
           <div
-            class="relative flex flex-col items-center justify-center pt-8"
+            className="relative flex flex-col items-center justify-center pt-8"
             onClick={() => setSiteImage(type)}
           >
             {avatar ? (
               <img
                 id="avatarPreview"
-                class="absolute inset-0 w-full h-32 block"
+                className="absolute inset-0 w-full h-32 block"
                 src="static/images/avatar.png"
               />
             ) : (
               <>
                 <ImageUp color="#a1a1a1" />
-                <p class="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
+                <p className="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
                   select a image
                 </p>
               </>
             )}
           </div>
         </div>
-        <p class="text-sm text-muted-foreground">select a image for {label}</p>
+        <p className="text-sm text-muted-foreground">
+          select a image for {label}
+        </p>
       </div>
     );
   };
@@ -161,18 +163,13 @@ function SiteSetting() {
               <FormItem>
                 <FormLabel>Theme</FormLabel>
                 <Select
-                  {...field}
                   onValueChange={field.onChange}
                   value={field.value ? field.value : "mini"}
-                  name={field.name}
+                  defaultValue={field.value ? field.value : "mini"}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue
-                        placeholder="Theme"
-                        onBlur={field.onBlur}
-                        ref={field.ref}
-                      />
+                      <SelectValue placeholder="Theme" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>

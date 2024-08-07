@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -11,7 +12,11 @@ import { Toaster } from "@/components/ui/sonner"
 
 function SettingsPage() {
   const [panel, setPanel] = useState("");
-  const [curMenu, setCurMenu] = useState("General");
+  const [curMenu, setCurMenu] = useState("Theme");
+
+  useEffect(() => {
+    navChange("Theme", <SiteSetting />);
+  }, []);
 
   function navChange(text, to) {
     setCurMenu(text);

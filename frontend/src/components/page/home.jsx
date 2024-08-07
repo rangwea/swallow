@@ -39,17 +39,32 @@ function Home() {
   const [articles, setArticles] = useState([]);
   const [checked, setChecked] = useState([]);
   const [deleteBtnShow, setDeleteBtnShow] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState("");
 
-  function searchArticles(e) {
-    if (e === "" || e.key === "Enter") {
-      let text = e === "" ? e : e.target.value;
-      ArticleList(text).then((r) => ifSuccess(r, setArticles));
+  function enterSearch(e) {
+    if (e.key === "Enter") {
+      doSearch();
     }
   }
 
+  function doSearch() {
+    ArticleList(search, page).then((r) => {
+      if (isSuccess(r)) {
+        setTotal(r.data.total);
+        setArticles(r.data.list);
+      }
+    });
+  }
+
   useEffect(() => {
-    searchArticles("");
+    doSearch();
   }, []);
+
+  useEffect(() => {
+    doSearch();
+  }, [page]);
 
   function preview() {
     SitePreview().then(checkError);
@@ -64,7 +79,7 @@ function Home() {
       ArticleRemove(checked).then((r) => {
         if (isSuccess(r)) {
           toast.info(`removed ${checked.length} articles`, 2);
-          searchArticles("", null);
+          doSearch();
           setChecked([]);
           setDeleteBtnShow(false);
         }
@@ -83,50 +98,52 @@ function Home() {
     setChecked(n);
   }
 
+  function pageSearch(type) {
+    if (type === "first" && page > 0) {
+      setPage(0);
+    } else if (type === "prev" && page > 0) {
+      setPage(page - 1);
+    } else if (type === "next" && page < calPage()) {
+      setPage(page + 1);
+    } else if (type === "last" && page < calPage()) {
+      setPage(calPage());
+    }
+  }
+
+  function calPage() {
+    return Math.ceil(total / 10) - 1;
+  }
+
   const IBtn = ({ icon, onClick }) => {
     const LucideIcon = icons[icon];
     return (
       <Button
-        className="m-1 w-8 h-8"
+        className="m-1 w-8 h-8 hover:bg-slate-300"
         variant="ghost"
         size="icon"
         onClick={onClick}
       >
-        <LucideIcon size="20" color="#676565" strokeWidth={1.5} />
+        <LucideIcon size="18" color="#676565" strokeWidth={1.5} />
       </Button>
     );
   };
 
   return (
     <>
-      <div className="h-screen">
-        <Toaster position="top-center" />
+      <Toaster position="top-center" />
+      <div className="flex flex-col h-screen space-y-2">
+        {/* header */}
         <div
-          className="flex items-center pt-10 px-16"
+          className="flex items-center bg-slate-50 py-1"
           style={{ "--wails-draggable": "drag" }}
         >
-          <div className="flex flex-col">
-            <h2 className="text-2xl font-bold">Swallow</h2>
-            <p className="text-gray-500">All moments will be lost in time!</p>
-          </div>
-          <Card className="ml-auto">
-            <Link to="/editor">
-              <IBtn icon="SquarePlus" />
-            </Link>
-            <IBtn icon="View" onClick={preview} />
-            <IBtn icon="Rocket" onClick={deploy} />
-            <Link to="/settings">
-              <IBtn icon="Settings" />
-            </Link>
-          </Card>
-        </div>
-
-        <div className="flex flex-col mt-5 mx-16">
-          <div className="flex items-center">
+          <div className="flex-1"></div>
+          <div className="flex-1 flex items-center">
             <Input
               placeholder="search"
-              className="w-1/4 h-8"
-              onKeyDown={searchArticles}
+              className="h-8"
+              onKeyDown={enterSearch}
+              onChange={setSearch}
             />
             {deleteBtnShow ? (
               <Button
@@ -139,18 +156,23 @@ function Home() {
               </Button>
             ) : null}
           </div>
+          <div className="flex-1 flex justify-end">
+            <Link to="/editor">
+              <IBtn icon="SquarePlus" />
+            </Link>
+            <IBtn icon="View" onClick={preview} />
+            <IBtn icon="Rocket" onClick={deploy} />
+            <Link to="/settings">
+              <IBtn icon="Settings" />
+            </Link>
+          </div>
+        </div>
+        {/* header */}
+
+        {/* body */}
+        <div className="flex flex-col mt-5 mx-16 flex-grow overflow-auto scrollbar-hide">
           <div className="border border-slate-200 rounded-lg text-slate-600 mt-2">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <Checkbox />
-                  </TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Tags</TableHead>
-                </TableRow>
-              </TableHeader>
               <TableBody>
                 {articles.map((item) => (
                   <TableRow key={item.id}>
@@ -163,27 +185,55 @@ function Home() {
                       <Link to={"/editor?id=" + item.id}>{item.title}</Link>
                     </TableCell>
                     <TableCell>{item.createTime}</TableCell>
-                    <TableCell className="text-right">{item.tags}</TableCell>
+                    <TableCell>{item.tags}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
         </div>
-      </div>
-      <div className="flex justify-center items-center fixed bottom-0 border-t w-full py-1">
-        <Button className="m-1 h-8 w-10" variant="outline" size="icon">
-          <ChevronsLeft color="#676565" strokeWidth={1.5} size={22} />
-        </Button>
-        <Button className="m-1 h-8 w-10" variant="outline" size="icon">
-          <ChevronLeft color="#676565" strokeWidth={1.5} size={22} />
-        </Button>
-        <Button className="m-1 h-8 w-10" variant="outline" size="icon">
-          <ChevronRight color="#676565" strokeWidth={1.5} size={22} />
-        </Button>
-        <Button className="m-1 h-8 w-10" variant="outline" size="icon">
-          <ChevronsRight color="#676565" strokeWidth={1.5} size={22} />
-        </Button>
+        {/* body */}
+
+        {/* footer */}
+        <div className="flex items-center w-full py-1 bg-slate-50">
+          <div className="flex-1 text-xs pl-5 text-slate-500">Total {total}</div>
+          <div className="flex-1 flex justify-center">
+            <Button
+              className="m-1 h-6 w-10 hover:bg-slate-300"
+              variant="ghost"
+              size="icon"
+              onClick={() => pageSearch("first")}
+            >
+              <ChevronsLeft color="#676565" strokeWidth={1.5} size={22} />
+            </Button>
+            <Button
+              className="m-1 h-6 w-10 hover:bg-slate-300"
+              variant="ghost"
+              size="icon"
+              onClick={() => pageSearch("prev")}
+            >
+              <ChevronLeft color="#676565" strokeWidth={1.5} size={22} />
+            </Button>
+            <Button
+              className="m-1 h-6 w-10 hover:bg-slate-300"
+              variant="ghost"
+              size="icon"
+              onClick={() => pageSearch("next")}
+            >
+              <ChevronRight color="#676565" strokeWidth={1.5} size={22} />
+            </Button>
+            <Button
+              className="m-1 h-6 w-10 hover:bg-slate-300"
+              variant="ghost"
+              size="icon"
+              onClick={() => pageSearch("last")}
+            >
+              <ChevronsRight color="#676565" strokeWidth={1.5} size={22} />
+            </Button>
+          </div>
+          <div className="flex-1"></div>
+        </div>
+        {/* footer */}
       </div>
     </>
   );
