@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import {
   icons,
   ChevronsLeft,
@@ -21,19 +13,14 @@ import {
   ChevronsRight,
   Trash2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArticleList,
   ArticleRemove,
   SitePreview,
   SiteDeploy,
 } from "/wailsjs/go/backend/App";
-import {
-  ifSuccess,
-  isSuccess,
-  checkError,
-  checkResult,
-} from "@/components/page/util";
+import { isSuccess, checkError, checkResult } from "@/components/page/util";
 
 function Home() {
   const [articles, setArticles] = useState([]);
@@ -42,6 +29,7 @@ function Home() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
+  const navigate = useNavigate();
 
   function enterSearch(e) {
     if (e.key === "Enter") {
@@ -50,7 +38,9 @@ function Home() {
   }
 
   function doSearch() {
+    console.log(search, page)
     ArticleList(search, page).then((r) => {
+      console.log(r)
       if (isSuccess(r)) {
         setTotal(r.data.total);
         setArticles(r.data.list);
@@ -143,7 +133,7 @@ function Home() {
               placeholder="search"
               className="h-8"
               onKeyDown={enterSearch}
-              onChange={setSearch}
+              onChange={(e) => setSearch(e.target.value)}
             />
             {deleteBtnShow ? (
               <Button
@@ -175,15 +165,16 @@ function Home() {
             <Table>
               <TableBody>
                 {articles.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow
+                    key={item.id}
+                    onClick={() => navigate("/editor?id=" + item.id)}
+                  >
                     <TableCell>
                       <Checkbox
                         onCheckedChange={(e) => checkedChange(e, item.id + "")}
                       />
                     </TableCell>
-                    <TableCell className="text-lg">
-                      <Link to={"/editor?id=" + item.id}>{item.title}</Link>
-                    </TableCell>
+                    <TableCell className="text-lg">{item.title}</TableCell>
                     <TableCell>{item.createTime}</TableCell>
                     <TableCell>{item.tags}</TableCell>
                   </TableRow>
@@ -196,7 +187,9 @@ function Home() {
 
         {/* footer */}
         <div className="flex items-center w-full py-1 bg-slate-50">
-          <div className="flex-1 text-xs pl-5 text-slate-500">Total {total}</div>
+          <div className="flex-1 text-xs pl-5 text-slate-500">
+            Total {total}
+          </div>
           <div className="flex-1 flex justify-center">
             <Button
               className="m-1 h-6 w-10 hover:bg-slate-300"
