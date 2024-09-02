@@ -20,7 +20,7 @@ function DeploySetting() {
       if (isSuccess(result)) {
         const data = result.data;
         if (data && data.activedDeploy) {
-          setActivedDeploy();
+          setActivedDeploy(data.activedDeploy);
         }
       }
     });
@@ -29,7 +29,7 @@ function DeploySetting() {
   return (
     <>
       <Toaster position="top-center" />
-      <Tabs defaultValue={activedDeploy}>
+      <Tabs value={activedDeploy}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="github">github</TabsTrigger>
           <TabsTrigger value="cos">cos</TabsTrigger>

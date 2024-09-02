@@ -3,7 +3,6 @@ package backend
 import (
 	"bufio"
 	"bytes"
-	"github.com/rangwea/swallows/backend/util"
 	"net/http"
 	"os"
 	"path"
@@ -11,6 +10,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/rangwea/swallows/backend/util"
 
 	"github.com/gohugoio/hugo/config"
 	"github.com/gohugoio/hugo/config/allconfig"
@@ -342,6 +343,24 @@ func (h *_hugo) WriteConfig(c Config) error {
 	}
 
 	return nil
+}
+
+func (h *_hugo) ReadConfigStr() (c []byte, err error) {
+	c, err = os.ReadFile(h.configFile)
+	if err != nil {
+		slog.Error("read config fail", err)
+		return
+	}
+	return
+}
+
+func (h *_hugo) WriteConfigStr(c []byte) (err error) {
+	err = os.WriteFile(h.configFile, c, os.ModePerm)
+	if err != nil {
+		slog.Error("write config fail", err)
+		return
+	}
+	return
 }
 
 func (h *_hugo) SplitMetaAndContent(article string) (meta string, content string) {

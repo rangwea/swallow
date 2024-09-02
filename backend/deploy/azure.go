@@ -1,3 +1,5 @@
+// Microsoft Azure Blob Storage
+// See doc:https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-go?tabs=roles-azure-portal
 package deploy
 
 import (

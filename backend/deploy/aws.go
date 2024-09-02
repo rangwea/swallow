@@ -1,3 +1,5 @@
+// Amazon S3
+// See doc: https://aws.github.io/aws-sdk-go-v2/docs/
 package deploy
 
 import (

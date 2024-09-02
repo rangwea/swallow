@@ -2,10 +2,11 @@ package backend
 
 import (
 	"fmt"
-	"github.com/rangwea/swallows/backend/util"
-	"golang.org/x/exp/slog"
 	"os"
 	"path"
+
+	"github.com/rangwea/swallows/backend/util"
+	"golang.org/x/exp/slog"
 )
 
 type ConfType string

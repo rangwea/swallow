@@ -37,7 +37,9 @@ function CosSetting() {
   }
 
   function onSubmit(values) {
-    ConfSave(confType, values).then(r => checkResult(r, "save config success"));
+    ConfSave(confType, JSON.stringify(values)).then((r) =>
+      checkResult(r, "save config success")
+    );
   }
 
   return (
@@ -49,20 +51,6 @@ function CosSetting() {
       <Separator />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="appId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>AppId</FormLabel>
-                <FormControl>
-                  <Input placeholder="AppId" {...field} />
-                </FormControl>
-                <FormDescription>Your cos app id</FormDescription>
-                <FormMessage></FormMessage>
-              </FormItem>
-            )}
-          ></FormField>
           <FormField
             control={form.control}
             name="secretId"

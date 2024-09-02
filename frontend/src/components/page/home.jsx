@@ -38,9 +38,7 @@ function Home() {
   }
 
   function doSearch() {
-    console.log(search, page)
     ArticleList(search, page).then((r) => {
-      console.log(r)
       if (isSuccess(r)) {
         setTotal(r.data.total);
         setArticles(r.data.list);
@@ -103,7 +101,7 @@ function Home() {
   function calPage() {
     return Math.ceil(total / 10) - 1;
   }
-
+  
   const IBtn = ({ icon, onClick }) => {
     const LucideIcon = icons[icon];
     return (
@@ -160,28 +158,29 @@ function Home() {
         {/* header */}
 
         {/* body */}
-        <div className="flex flex-col mt-5 mx-16 flex-grow overflow-auto scrollbar-hide">
-          <div className="border border-slate-200 rounded-lg text-slate-600 mt-2">
-            <Table>
-              <TableBody>
-                {articles.map((item) => (
-                  <TableRow
-                    key={item.id}
-                    onClick={() => navigate("/editor?id=" + item.id)}
-                  >
-                    <TableCell>
-                      <Checkbox
-                        onCheckedChange={(e) => checkedChange(e, item.id + "")}
-                      />
-                    </TableCell>
-                    <TableCell className="text-lg">{item.title}</TableCell>
-                    <TableCell>{item.createTime}</TableCell>
-                    <TableCell>{item.tags}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+        <div className="flex flex-col mt-5 mx-16 flex-grow overflow-auto scrollbar-hide space-y-2 text-slate-500">
+          {articles.map((item) => (
+            <div
+              className="flex border border-slate-200 rounded-lg py-4 px-4 items-center"
+              onClick={() => navigate("/editor?id=" + item.id)}
+              key={item.id}
+            >
+              <div className="flex-none" onClick={e => e.stopPropagation()}>
+                <Checkbox
+                  onCheckedChange={(e) => checkedChange(e, item.id + "")}
+                />
+              </div>
+              <div className="basis-1/2 text-xl pl-5 text-slate-800">
+                {item.title}
+              </div>
+              <div className="basis-1/4 flex justify-center text-sm">
+                {item.tags}
+              </div>
+              <div className="basis-1/4 flex justify-center text-sm">
+                {item.createTime}
+              </div>
+            </div>
+          ))}
         </div>
         {/* body */}
 

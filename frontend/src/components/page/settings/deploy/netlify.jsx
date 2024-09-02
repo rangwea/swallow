@@ -37,7 +37,7 @@ function NetlifySetting() {
   }
 
   function onSubmit(values) {
-    ConfSave(confType, values).then(r => checkResult(r, "save config success"));
+    ConfSave(confType, JSON.stringify(values)).then(r => checkResult(r, "save config success"));
   }
 
   return (

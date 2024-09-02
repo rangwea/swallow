@@ -94,7 +94,7 @@ type R struct {
 }
 
 type AppConf struct {
-	ActivedDeploy ConfType
+	ActivedDeploy ConfType `json:"activedDeploy"`
 }
 
 const confTypeApp ConfType = "app"
@@ -121,7 +121,7 @@ func (a *App) SiteDeploy() *R {
 
 	ac, err := getAppConf()
 	if err != nil {
-		return fail(err)
+		return fail(errors.Wrap(err, "get app conf fail"))
 	}
 	if ac == nil || ac.ActivedDeploy == "" {
 		return fail(errors.New("please set server config"))
@@ -129,7 +129,7 @@ func (a *App) SiteDeploy() *R {
 
 	err = Deployers.Deploy(ac.ActivedDeploy, Hugo.PublicDir)
 	if err != nil {
-		return fail(err)
+		return fail(errors.Wrap(err, "deploy fail"))
 	}
 
 	return success(nil)
@@ -274,26 +274,42 @@ func (a *App) SiteConfigSave(c Config) *R {
 	return success(nil)
 }
 
+func (a *App) SiteConfigGetStr() *R {
+	c, err := Hugo.ReadConfigStr()
+	if err != nil {
+		return fail(err)
+	}
+	return success(c)
+}
+
+func (a *App) SiteConfigSaveStr(c []byte) *R {
+	err := Hugo.WriteConfigStr(c)
+	if err != nil {
+		return fail(err)
+	}
+	return success(nil)
+}
+
 func (a *App) ConfGet(t ConfType) *R {
 	v, err := Conf.Read(t)
 	if err != nil {
 		return fail(err)
 	}
-	return success(v)
+	var r map[string]interface{}
+	json.Unmarshal(v, &r)
+	return success(r)
 }
 
 func (a *App) ConfSave(t ConfType, v string) *R {
-	appConfBytes, err := Conf.Read(confTypeApp)
-	if err != nil {
-		return fail(err)
-	}
-	appConf := &AppConf{}
-	err = json.Unmarshal(appConfBytes, appConf)
+	appConf, err := getAppConf()
 	if err != nil {
 		return fail(err)
 	}
 	appConf.ActivedDeploy = t
-	appConfBytes, err = json.Marshal(appConf)
+	appConfBytes, err := json.Marshal(appConf)
+	if err != nil {
+		return fail(errors.New("app conf marshal error"))
+	}
 	Conf.Write(confTypeApp, string(appConfBytes))
 
 	err = Conf.Write(t, v)
@@ -391,7 +407,13 @@ func saveArticleToDB(aidpr *string, meta Meta) error {
 
 func getAppConf() (c *AppConf, err error) {
 	cs, err := Conf.Read(confTypeApp)
+	if err != nil {
+		return
+	}
 	c = &AppConf{}
+	if cs == nil {
+		return
+	}
 	err = json.Unmarshal(cs, c)
 	return
 }
