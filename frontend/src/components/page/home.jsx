@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import {
   icons,
   ChevronsLeft,
@@ -111,7 +110,7 @@ function Home() {
         size="icon"
         onClick={onClick}
       >
-        <LucideIcon size="18" color="#676565" strokeWidth={1.5} />
+        <LucideIcon size="18" color="#676767" strokeWidth={1.5} />
       </Button>
     );
   };
@@ -122,7 +121,7 @@ function Home() {
       <div className="flex flex-col h-screen space-y-2">
         {/* header */}
         <div
-          className="flex items-center bg-slate-50 py-1"
+          className="flex items-center py-1 bg-[rgb(247,247,247)]"
           style={{ "--wails-draggable": "drag" }}
         >
           <div className="flex-1"></div>
@@ -144,7 +143,7 @@ function Home() {
               </Button>
             ) : null}
           </div>
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex justify-end pr-2">
             <Link to="/editor">
               <IBtn icon="SquarePlus" />
             </Link>
@@ -158,10 +157,10 @@ function Home() {
         {/* header */}
 
         {/* body */}
-        <div className="flex flex-col mt-5 mx-16 flex-grow overflow-auto scrollbar-hide space-y-2 text-slate-500">
+        <div className="flex flex-col flex-grow overflow-auto scrollbar-hide space-y-2 text-slate-500 bg-[rgb(255,255,255)] px-10">
           {articles.map((item) => (
             <div
-              className="flex border border-slate-200 rounded-lg py-4 px-4 items-center"
+              className="flex border rounded-lg py-4 px-4 items-center"
               onClick={() => navigate("/editor?id=" + item.id)}
               key={item.id}
             >
@@ -185,7 +184,7 @@ function Home() {
         {/* body */}
 
         {/* footer */}
-        <div className="flex items-center w-full py-1 bg-slate-50">
+        <div className="flex items-center w-full py-1 bg-[rgb(247,247,247)]">
           <div className="flex-1 text-xs pl-5 text-slate-500">
             Total {total}
           </div>

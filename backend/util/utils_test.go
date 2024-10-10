@@ -12,7 +12,7 @@ func TestUnZip(t *testing.T) {
 }
 
 func TestGetLocalFilesCRC64(t *testing.T) {
-	dir := "/Users/feijianwu/Code/mine/swallow-wails2/backend/deploy/test"
+	dir := ""
 	r, err := GetLocalFilesCRC64(dir)
 	if err != nil {
 		println(err)
