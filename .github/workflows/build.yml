@@ -40,7 +40,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - uses: dAppServer/wails-build-action@v2
+      - uses: rangwea/wails-build-action@v1
         with:
           build-name: ${{ matrix.output }}
           build-platform: ${{ matrix.platform }}
