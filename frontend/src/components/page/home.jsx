@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster } from "@/components/ui/sonner";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   icons,
@@ -100,7 +102,7 @@ function Home() {
   function calPage() {
     return Math.ceil(total / 10) - 1;
   }
-  
+
   const IBtn = ({ icon, onClick }) => {
     const LucideIcon = icons[icon];
     return (
@@ -115,13 +117,23 @@ function Home() {
     );
   };
 
+  const tags = [
+    { id: 1, name: "工作", color: "#e6f4ff", textColor: "#1677ff" },
+    { id: 2, name: "学习", color: "#f6ffed", textColor: "#52c41a" },
+    { id: 3, name: "生活", color: "#fffbe6", textColor: "#faad14" },
+  ];
+
+  const getTagStyle = (tagName) => {
+    return { backgroundColor: "#e6f4ff", color: "#1677ff" };
+  };
+
   return (
     <>
       <Toaster position="top-center" />
-      <div className="flex flex-col h-screen space-y-2">
+      <div className="flex flex-col h-screen">
         {/* header */}
         <div
-          className="flex items-center py-1 bg-[rgb(247,247,247)]"
+          className="flex items-center py-2 border-b"
           style={{ "--wails-draggable": "drag" }}
         >
           <div className="flex-1"></div>
@@ -145,84 +157,133 @@ function Home() {
           </div>
           <div className="flex-1 flex justify-end pr-2">
             <Link to="/editor">
-              <IBtn icon="SquarePlus" />
+              <Button
+                className="!rounded-button whitespace-nowrap h-8 flex items-center justify-center"
+                variant="default"
+              >
+                <i className="fa-solid fa-plus text-sm mr-2" />
+                新建笔记
+              </Button>
             </Link>
-            <IBtn icon="View" onClick={preview} />
-            <IBtn icon="Rocket" onClick={deploy} />
+            <Button
+              variant="ghost"
+              className="!rounded-button whitespace-nowrap h-8 flex items-center justify-center"
+            >
+              <i className="fa-regular fa-eye text-sm mr-2" />
+              预览
+            </Button>
+            <Button
+              variant="ghost"
+              className="!rounded-button whitespace-nowrap h-8 flex items-center justify-center"
+            >
+              <i className="fa-solid fa-cloud-arrow-up text-sm mr-2" />
+              部署
+            </Button>
             <Link to="/settings">
-              <IBtn icon="Settings" />
+              <Button
+                variant="ghost"
+                className="!rounded-button whitespace-nowrap h-8 flex items-center justify-center"
+              >
+                <i className="fa-solid fa-gear text-sm mr-2" />
+                配置
+              </Button>
             </Link>
           </div>
         </div>
         {/* header */}
 
-        {/* body */}
-        <div className="flex flex-col flex-grow overflow-auto scrollbar-hide space-y-2 text-slate-500 bg-[rgb(255,255,255)] px-10">
-          {articles.map((item) => (
-            <div
-              className="flex border rounded-lg py-4 px-4 items-center"
-              onClick={() => navigate("/editor?id=" + item.id)}
-              key={item.id}
-            >
-              <div className="flex-none" onClick={e => e.stopPropagation()}>
-                <Checkbox
-                  onCheckedChange={(e) => checkedChange(e, item.id + "")}
-                />
-              </div>
-              <div className="basis-1/2 text-xl pl-5 text-slate-800">
-                {item.title}
-              </div>
-              <div className="basis-1/4 flex justify-center text-sm">
-                {item.tags}
-              </div>
-              <div className="basis-1/4 flex justify-center text-sm">
-                {item.createTime}
-              </div>
+        {/* tags */}
+        <div className="py-2">
+          <div className="px-6 py-1 flex items-center">
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  className="!rounded-button"
+                  style={{
+                    backgroundColor: tag.color,
+                    color: tag.textColor,
+                  }}
+                  variant="outline"
+                >
+                  #{tag.name}
+                </Badge>
+              ))}
             </div>
-          ))}
+          </div>
+        </div>
+        {/* tags */}
+
+        {/* body */}
+        <div className="flex flex-col flex-grow overflow-auto scrollbar-hide space-y-2 text-slate-500 bg-[rgb(255,255,255)] px-4">
+        {articles.map((article) => (
+                <Card
+                  key={article.id}
+                  className="w-full hover:shadow-md transition-shadow"
+                >
+                  <div className="p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-medium text-gray-900">
+                        {article.title}
+                      </h3>
+                      <span className="text-xs text-gray-500">
+                        {article.createTime}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {article.content}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {article.tags.split(",").map((tag, index) => (
+                        <Badge
+                          key={index}
+                          className="!rounded-button"
+                          style={getTagStyle(tag)}
+                          variant="outline"
+                        >
+                          #{tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              ))}
         </div>
         {/* body */}
 
         {/* footer */}
-        <div className="flex items-center w-full py-1 bg-[rgb(247,247,247)]">
-          <div className="flex-1 text-xs pl-5 text-slate-500">
-            Total {total}
-          </div>
-          <div className="flex-1 flex justify-center">
+        <div className="flex justify-center py-3 border-t border-gray-100 bg-white fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[1440px]">
+          <div className="flex items-center gap-2">
             <Button
-              className="m-1 h-6 w-10 hover:bg-slate-300"
-              variant="ghost"
-              size="icon"
-              onClick={() => pageSearch("first")}
+              variant="outline"
+              size="sm"
+              className="!rounded-button"
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              disabled={page === 1}
             >
-              <ChevronsLeft color="#676565" strokeWidth={1.5} size={22} />
+              <i className="fa-solid fa-chevron-left mr-2 text-xs" />
+              上一页
             </Button>
+            <div className="flex items-center gap-1 px-4">
+              <span className="text-sm text-gray-700">第 {page} 页</span>
+              <span className="text-sm text-gray-400">/</span>
+              <span className="text-sm text-gray-400">
+                共 {Math.ceil(30 / 10)} 页
+              </span>
+            </div>
             <Button
-              className="m-1 h-6 w-10 hover:bg-slate-300"
-              variant="ghost"
-              size="icon"
-              onClick={() => pageSearch("prev")}
+              variant="outline"
+              size="sm"
+              className="!rounded-button"
+              onClick={() =>
+                setPage((prev) => Math.min(Math.ceil(30 / 10), prev + 1))
+              }
+              disabled={page === Math.ceil(30 / 10)}
             >
-              <ChevronLeft color="#676565" strokeWidth={1.5} size={22} />
-            </Button>
-            <Button
-              className="m-1 h-6 w-10 hover:bg-slate-300"
-              variant="ghost"
-              size="icon"
-              onClick={() => pageSearch("next")}
-            >
-              <ChevronRight color="#676565" strokeWidth={1.5} size={22} />
-            </Button>
-            <Button
-              className="m-1 h-6 w-10 hover:bg-slate-300"
-              variant="ghost"
-              size="icon"
-              onClick={() => pageSearch("last")}
-            >
-              <ChevronsRight color="#676565" strokeWidth={1.5} size={22} />
+              下一页
+              <i className="fa-solid fa-chevron-right ml-2 text-xs" />
             </Button>
           </div>
-          <div className="flex-1"></div>
         </div>
         {/* footer */}
       </div>
