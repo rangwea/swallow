@@ -4,18 +4,20 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import SiteSetting from "@/components/page/settings/site";
+import AppearanceSetting from "@/components/page/settings/appearance";
 import { cn } from "@/lib/utils";
 import { CircleX } from "lucide-react";
 import "../style.css";
 import DeploySetting from "@/components/page/settings/deploy/layout";
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/sonner";
+import { t } from "@/lib/i18n";
 
 function SettingsPage() {
   const [panel, setPanel] = useState("");
-  const [curMenu, setCurMenu] = useState("Theme");
+  const [curMenu, setCurMenu] = useState("appearance");
 
   useEffect(() => {
-    navChange("Theme", <SiteSetting />);
+    navChange("appearance", <AppearanceSetting />);
   }, []);
 
   function navChange(text, to) {
@@ -23,7 +25,7 @@ function SettingsPage() {
     setPanel(to);
   }
 
-  const NavItem = ({ text, to }) => {
+  const NavItem = ({ text, to, labelKey }) => {
     return (
       <Link
         onClick={() => navChange(text, to)}
@@ -34,7 +36,7 @@ function SettingsPage() {
           "h-8"
         )}
       >
-        {text}
+        {t(labelKey)}
       </Link>
     );
   };
@@ -46,9 +48,9 @@ function SettingsPage() {
         className="space-y-0.5 pt-10"
         style={{ "--wails-draggable": "drag" }}
       >
-        <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{t("settings")}</h2>
         <p className="text-muted-foreground">
-          Manage your account settings and set e-mail preferences.
+          {t("settingsDesc")}
         </p>
         <Link to="/">
           <Button
@@ -63,8 +65,9 @@ function SettingsPage() {
       <Separator className="my-6" />
       <div className="flex flex-row space-x-5 overflow-hidden">
         <nav className="flex flex-col text-sm text-muted-foreground w-40 space-y-2">
-          <NavItem text="Theme" to={<SiteSetting />} />
-          <NavItem text="Deploy" to={<DeploySetting />} />
+          <NavItem text="appearance" labelKey="appearance" to={<AppearanceSetting />} />
+          <NavItem text="theme" labelKey="theme" to={<SiteSetting />} />
+          <NavItem text="deploy" labelKey="deploy" to={<DeploySetting />} />
         </nav>
         <div className="flex-1 pb-5 h-[calc(100vh-160px)] overflow-y-auto scrollbar-hide">
           {panel}

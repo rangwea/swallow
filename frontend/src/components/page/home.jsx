@@ -18,8 +18,10 @@ import {
   ArticleRemove,
   SitePreview,
   SiteDeploy,
+  ConfGet,
 } from "/wailsjs/go/backend/App";
 import { isSuccess, checkError, checkResult } from "@/components/page/util";
+import { t } from "@/lib/i18n";
 
 function Home() {
   const [articles, setArticles] = useState([]);
@@ -28,6 +30,8 @@ function Home() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
+  const [articlesPerPage, setArticlesPerPage] = useState(10);
+  const [showArticlesStats, setShowArticlesStats] = useState(true);
   const navigate = useNavigate();
 
   function enterSearch(e) {
@@ -46,8 +50,22 @@ function Home() {
   }
 
   useEffect(() => {
+    loadAppearanceSettings();
     doSearch();
   }, []);
+
+  function loadAppearanceSettings() {
+    ConfGet("app").then((result) => {
+      if (isSuccess(result) && result.data) {
+        setArticlesPerPage(result.data.articlesPerPage || 10);
+        setShowArticlesStats(
+          result.data.showArticlesStats !== undefined
+            ? result.data.showArticlesStats
+            : true
+        );
+      }
+    });
+  }
 
   useEffect(() => {
     doSearch();
@@ -98,7 +116,7 @@ function Home() {
   }
 
   function calPage() {
-    return Math.ceil(total / 10) - 1;
+    return Math.ceil(total / articlesPerPage) - 1;
   }
   
   const IBtn = ({ icon, onClick }) => {
@@ -131,7 +149,7 @@ function Home() {
 
           <div className="flex-1 flex items-center justify-center gap-3 max-w-md mx-auto">
             <Input
-              placeholder="Search articles..."
+              placeholder={t("searchPlaceholder")}
               className="h-11 bg-background/70 border-border/40 focus:border-accent transition-all duration-300 placeholder:text-muted-foreground/40 shadow-sm"
               onKeyDown={enterSearch}
               onChange={(e) => setSearch(e.target.value)}
@@ -163,16 +181,18 @@ function Home() {
 
         {/* body */}
         <div className="flex-grow overflow-auto scrollbar-hide px-16 py-10">
-          {/* Stats Bar */}
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/30">
-            <div className="flex items-baseline gap-3">
-              <span className="text-5xl font-serif text-foreground/90 tabular-nums">{total}</span>
-              <span className="text-base text-muted-foreground tracking-wider uppercase">Articles</span>
+          {/* Stats Bar - conditionally rendered */}
+          {showArticlesStats && (
+            <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/30">
+              <div className="flex items-baseline gap-3">
+                <span className="text-5xl font-serif text-foreground/90 tabular-nums">{total}</span>
+                <span className="text-base text-muted-foreground tracking-wider uppercase">{t("articlesCount")}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>{t("page")} {page + 1} {t("of")} {calPage() + 1}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Page {page + 1} of {calPage() + 1}</span>
-            </div>
-          </div>
+          )}
 
           {/* Article Grid */}
           <div className="grid grid-cols-1 gap-6 pb-8">

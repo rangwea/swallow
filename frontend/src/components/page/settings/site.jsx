@@ -33,6 +33,7 @@ import {
   checkError,
 } from "@/components/page/util";
 import { ImageUp } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 function SiteSetting() {
   const form = useForm();
@@ -87,7 +88,7 @@ function SiteSetting() {
     return (
       <div className="space-y-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          {label}
+          {t(label.toLowerCase())}
         </label>
         <div className="flex flex-col w-32 h-32 border-2 border-dashed hover:bg-gray-100 hover:border-gray-300">
           <div
@@ -104,14 +105,14 @@ function SiteSetting() {
               <>
                 <ImageUp color="#a1a1a1" />
                 <p className="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
-                  select a image
+                  {t("selectImage")}
                 </p>
               </>
             )}
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          select a image for {label}
+          {t("selectImage")} {t(label.toLowerCase())}
         </p>
       </div>
     );
@@ -120,9 +121,9 @@ function SiteSetting() {
   return (
     <div className="space-y-6 px-2">
       <div>
-        <h3 className="text-lg font-medium">Account</h3>
+        <h3 className="text-lg font-medium">{t("siteTitle")}</h3>
         <p className="text-sm text-muted-foreground">
-          Update your site settings.
+          {t("siteDesc")}
         </p>
       </div>
       <Separator />
@@ -133,11 +134,11 @@ function SiteSetting() {
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel>{t("siteTitleLabel")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Site Title" {...field} />
+                  <Input placeholder={t("siteTitleLabel")} {...field} />
                 </FormControl>
-                <FormDescription>Your website title</FormDescription>
+                <FormDescription>{t("siteDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -147,11 +148,11 @@ function SiteSetting() {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Description</FormLabel>
+                <FormLabel>{t("siteDescription")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Site Description" {...field} />
+                  <Input placeholder={t("siteDescription")} {...field} />
                 </FormControl>
-                <FormDescription>Your website description</FormDescription>
+                <FormDescription>{t("siteDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -161,7 +162,7 @@ function SiteSetting() {
             name="theme"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Theme</FormLabel>
+                <FormLabel>{t("siteTheme")}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value ? field.value : "mini"}
@@ -169,7 +170,7 @@ function SiteSetting() {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Theme" />
+                      <SelectValue placeholder={t("siteTheme")} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -181,7 +182,7 @@ function SiteSetting() {
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  select your website description
+                  {t("siteDesc")}
                 </FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
@@ -192,7 +193,7 @@ function SiteSetting() {
             name="defaultContentLanguage"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Language</FormLabel>
+                <FormLabel>{t("siteLanguage")}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -200,7 +201,7 @@ function SiteSetting() {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Language" />
+                      <SelectValue placeholder={t("siteLanguage")} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -209,7 +210,7 @@ function SiteSetting() {
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  select your website description
+                  {t("siteDesc")}
                 </FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
@@ -220,12 +221,12 @@ function SiteSetting() {
             name="copyright"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Copyright</FormLabel>
+                <FormLabel>{t("copyright")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="swallow" {...field} />
+                  <Input placeholder={t("copyright")} {...field} />
                 </FormControl>
                 <FormDescription>
-                  select your website description
+                  {t("siteDesc")}
                 </FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
@@ -236,28 +237,12 @@ function SiteSetting() {
             name="params.author.name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Author</FormLabel>
+                <FormLabel>{t("author")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="swallow" {...field} />
+                  <Input placeholder={t("author")} {...field} />
                 </FormControl>
                 <FormDescription>
-                  select your website description
-                </FormDescription>
-                <FormMessage></FormMessage>
-              </FormItem>
-            )}
-          ></FormField>
-          <FormField
-            control={form.control}
-            name="params.author.name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Author</FormLabel>
-                <FormControl>
-                  <Input placeholder="swallow" {...field} />
-                </FormControl>
-                <FormDescription>
-                  select your website description
+                  {t("siteDesc")}
                 </FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
@@ -265,7 +250,7 @@ function SiteSetting() {
           ></FormField>
           <SiteImageInput label="Avatar" type="avatar.png" />
           <SiteImageInput label="Favicon" type="favicon.ico" />
-          <Button type="submit">Submit</Button>
+          <Button type="submit">{t("save")}</Button>
         </form>
       </Form>
     </div>
