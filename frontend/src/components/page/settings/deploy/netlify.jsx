@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ConfSave, ConfGet } from "/wailsjs/go/backend/App";
 import { checkResult, isSuccess } from "@/components/page/util";
+import { t } from "@/lib/i18n";
 
 function NetlifySetting() {
   const form = useForm();
@@ -43,8 +44,8 @@ function NetlifySetting() {
   return (
     <div className="space-y-6 px-2">
       <div>
-        <h3 className="text-lg font-medium">Account</h3>
-        <p className="text-sm text-muted-foreground">Deploy site with cos.</p>
+        <h3 className="text-lg font-medium">{t("netlifyTitle")}</h3>
+        <p className="text-sm text-muted-foreground">{t("netlifyDesc")}</p>
       </div>
       <Separator />
       <Form {...form}>
@@ -58,7 +59,7 @@ function NetlifySetting() {
                 <FormControl>
                   <Input placeholder="SiteId" {...field} />
                 </FormControl>
-                <FormDescription>Your SiteId for netlify</FormDescription>
+                <FormDescription>{t("siteIdDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -72,7 +73,7 @@ function NetlifySetting() {
                 <FormControl>
                   <Input placeholder="Token" {...field} />
                 </FormControl>
-                <FormDescription>Your Token for netlify</FormDescription>
+                <FormDescription>{t("netlifyTokenDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}

@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ConfSave, ConfGet } from "/wailsjs/go/backend/App";
 import { checkResult, isSuccess } from "@/components/page/util";
+import { t } from "@/lib/i18n";
 
 function OssSetting() {
   const form = useForm();
@@ -43,8 +44,8 @@ function OssSetting() {
   return (
     <div className="space-y-6 px-2">
       <div>
-        <h3 className="text-lg font-medium">Account</h3>
-        <p className="text-sm text-muted-foreground">Deploy site with cos.</p>
+        <h3 className="text-lg font-medium">{t("ossTitle")}</h3>
+        <p className="text-sm text-muted-foreground">{t("ossDesc")}</p>
       </div>
       <Separator />
       <Form {...form}>
@@ -58,7 +59,7 @@ function OssSetting() {
                 <FormControl>
                   <Input placeholder="AppId" {...field} />
                 </FormControl>
-                <FormDescription>Your cos app id</FormDescription>
+                <FormDescription>{t("appIdDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -72,7 +73,7 @@ function OssSetting() {
                 <FormControl>
                   <Input placeholder="SecretId" {...field} />
                 </FormControl>
-                <FormDescription>Your SecretId for cos</FormDescription>
+                <FormDescription>{t("ossSecretIdDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -86,7 +87,7 @@ function OssSetting() {
                 <FormControl>
                   <Input placeholder="SecretKey" {...field} />
                 </FormControl>
-                <FormDescription>Your SecretKey for cos</FormDescription>
+                <FormDescription>{t("ossSecretKeyDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -100,7 +101,7 @@ function OssSetting() {
                 <FormControl>
                   <Input placeholder="Region" {...field} />
                 </FormControl>
-                <FormDescription>Your Region for cos</FormDescription>
+                <FormDescription>{t("ossRegionDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -114,7 +115,7 @@ function OssSetting() {
                 <FormControl>
                   <Input placeholder="Bucket" {...field} />
                 </FormControl>
-                <FormDescription>Your Bucket for cos</FormDescription>
+                <FormDescription>{t("ossBucketDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}

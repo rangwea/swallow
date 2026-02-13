@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ConfSave, ConfGet } from "/wailsjs/go/backend/App";
 import { checkResult, isSuccess } from "@/components/page/util";
+import { t } from "@/lib/i18n";
 
 function GitSetting() {
   const form = useForm();
@@ -43,9 +44,9 @@ function GitSetting() {
   return (
     <div className="space-y-6 px-2">
       <div>
-        <h3 className="text-lg font-medium">Github page</h3>
+        <h3 className="text-lg font-medium">{t("githubPageTitle")}</h3>
         <p className="text-sm text-muted-foreground">
-          Deploy site with github.
+          {t("githubPageDesc")}
         </p>
       </div>
       <Separator />
@@ -60,7 +61,7 @@ function GitSetting() {
                 <FormControl>
                   <Input placeholder="Repository" {...field} />
                 </FormControl>
-                <FormDescription>Your github repository url</FormDescription>
+                <FormDescription>{t("repositoryDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -74,7 +75,7 @@ function GitSetting() {
                 <FormControl>
                   <Input placeholder="email" {...field} />
                 </FormControl>
-                <FormDescription>Your email for github</FormDescription>
+                <FormDescription>{t("emailDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -88,7 +89,7 @@ function GitSetting() {
                 <FormControl>
                   <Input placeholder="username" {...field} />
                 </FormControl>
-                <FormDescription>Your username for github</FormDescription>
+                <FormDescription>{t("usernameDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -102,7 +103,7 @@ function GitSetting() {
                 <FormControl>
                   <Input placeholder="token" {...field} />
                 </FormControl>
-                <FormDescription>Your token for github</FormDescription>
+                <FormDescription>{t("tokenDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -116,7 +117,7 @@ function GitSetting() {
                 <FormControl>
                   <Input placeholder="cname" {...field} />
                 </FormControl>
-                <FormDescription>Your cname for gitpage</FormDescription>
+                <FormDescription>{t("cnameDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}

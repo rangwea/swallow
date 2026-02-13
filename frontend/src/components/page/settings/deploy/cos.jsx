@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ConfSave, ConfGet } from "/wailsjs/go/backend/App";
 import { checkResult, isSuccess } from "@/components/page/util";
+import { t } from "@/lib/i18n";
 
 function CosSetting() {
   const form = useForm();
@@ -45,8 +46,8 @@ function CosSetting() {
   return (
     <div className="space-y-6 px-2">
       <div>
-        <h3 className="text-lg font-medium">Account</h3>
-        <p className="text-sm text-muted-foreground">Deploy site with cos.</p>
+        <h3 className="text-lg font-medium">{t("cosTitle")}</h3>
+        <p className="text-sm text-muted-foreground">{t("cosDesc")}</p>
       </div>
       <Separator />
       <Form {...form}>
@@ -60,7 +61,7 @@ function CosSetting() {
                 <FormControl>
                   <Input placeholder="SecretId" {...field} />
                 </FormControl>
-                <FormDescription>Your SecretId for cos</FormDescription>
+                <FormDescription>{t("secretIdDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -74,7 +75,7 @@ function CosSetting() {
                 <FormControl>
                   <Input placeholder="SecretKey" {...field} />
                 </FormControl>
-                <FormDescription>Your SecretKey for cos</FormDescription>
+                <FormDescription>{t("secretKeyDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -88,7 +89,7 @@ function CosSetting() {
                 <FormControl>
                   <Input placeholder="Region" {...field} />
                 </FormControl>
-                <FormDescription>Your Region for cos</FormDescription>
+                <FormDescription>{t("regionDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}
@@ -102,7 +103,7 @@ function CosSetting() {
                 <FormControl>
                   <Input placeholder="Bucket" {...field} />
                 </FormControl>
-                <FormDescription>Your Bucket for cos</FormDescription>
+                <FormDescription>{t("bucketDesc")}</FormDescription>
                 <FormMessage></FormMessage>
               </FormItem>
             )}

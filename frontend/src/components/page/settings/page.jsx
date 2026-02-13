@@ -31,9 +31,12 @@ function SettingsPage() {
         onClick={() => navChange(text, to)}
         className={cn(
           buttonVariants({ variant: "ghost" }),
-          curMenu === text ? "bg-muted hover:bg-muted" : "hover:bg-transparent",
+          curMenu === text
+            ? "bg-accent/10 text-accent hover:bg-accent/15 hover:text-accent"
+            : "hover:bg-transparent hover:text-accent/70",
           "justify-start",
-          "h-8"
+          "h-8",
+          "transition-all duration-300"
         )}
       >
         {t(labelKey)}
