@@ -29,7 +29,7 @@ function DeploySetting() {
   return (
     <>
       <Toaster position="top-center" />
-      <Tabs value={activedDeploy}>
+      <Tabs value={activedDeploy} onValueChange={setActivedDeploy}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="github">github</TabsTrigger>
           <TabsTrigger value="cos">cos</TabsTrigger>
