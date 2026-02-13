@@ -97,6 +97,38 @@ export const translations = {
     oss: "阿里云 OSS",
     netlify: "Netlify",
 
+    // Deploy Form Descriptions - GitHub
+    githubPageTitle: "Github Page",
+    githubPageDesc: "使用 GitHub Pages 部署站点",
+    repositoryDesc: "你的 GitHub 仓库 URL",
+    emailDesc: "你的 GitHub 邮箱",
+    usernameDesc: "你的 GitHub 用户名",
+    tokenDesc: "你的 GitHub 访问令牌",
+    cnameDesc: "你的 GitHub Pages 自定义域名",
+
+    // Deploy Form Descriptions - COS
+    cosTitle: "腾讯云 COS",
+    cosDesc: "使用腾讯云 COS 部署站点",
+    secretIdDesc: "你的腾讯云 SecretId",
+    secretKeyDesc: "你的腾讯云 SecretKey",
+    regionDesc: "COS 存储桶所在地域",
+    bucketDesc: "COS 存储桶名称",
+
+    // Deploy Form Descriptions - OSS
+    ossTitle: "阿里云 OSS",
+    ossDesc: "使用阿里云 OSS 部署站点",
+    appIdDesc: "你的阿里云应用 ID",
+    ossSecretIdDesc: "你的阿里云 SecretId",
+    ossSecretKeyDesc: "你的阿里云 SecretKey",
+    ossRegionDesc: "OSS 存储桶所在地域",
+    ossBucketDesc: "OSS 存储桶名称",
+
+    // Deploy Form Descriptions - Netlify
+    netlifyTitle: "Netlify",
+    netlifyDesc: "使用 Netlify 部署站点",
+    siteIdDesc: "你的 Netlify 站点 ID",
+    netlifyTokenDesc: "你的 Netlify 访问令牌",
+
     // Themes
     warmSepia: "温暖米色",
     warmSepiaDesc: "温暖的米色主题",
@@ -213,6 +245,38 @@ export const translations = {
     cos: "騰訊雲 COS",
     oss: "阿里雲 OSS",
     netlify: "Netlify",
+
+    // Deploy Form Descriptions - GitHub
+    githubPageTitle: "Github Page",
+    githubPageDesc: "使用 GitHub Pages 部署站點",
+    repositoryDesc: "你的 GitHub 倉庫 URL",
+    emailDesc: "你的 GitHub 郵箱",
+    usernameDesc: "你的 GitHub 使用者名稱",
+    tokenDesc: "你的 GitHub 存取權杖",
+    cnameDesc: "你的 GitHub Pages 自訂網域",
+
+    // Deploy Form Descriptions - COS
+    cosTitle: "騰訊雲 COS",
+    cosDesc: "使用騰訊雲 COS 部署站點",
+    secretIdDesc: "你的騰訊雲 SecretId",
+    secretKeyDesc: "你的騰訊雲 SecretKey",
+    regionDesc: "COS 儲存桶所在地域",
+    bucketDesc: "COS 儲存桶名稱",
+
+    // Deploy Form Descriptions - OSS
+    ossTitle: "阿里雲 OSS",
+    ossDesc: "使用阿里雲 OSS 部署站點",
+    appIdDesc: "你的阿里雲應用 ID",
+    ossSecretIdDesc: "你的阿里雲 SecretId",
+    ossSecretKeyDesc: "你的阿里雲 SecretKey",
+    ossRegionDesc: "OSS 儲存桶所在地域",
+    ossBucketDesc: "OSS 儲存桶名稱",
+
+    // Deploy Form Descriptions - Netlify
+    netlifyTitle: "Netlify",
+    netlifyDesc: "使用 Netlify 部署站點",
+    siteIdDesc: "你的 Netlify 站點 ID",
+    netlifyTokenDesc: "你的 Netlify 存取權杖",
 
     // Themes
     warmSepia: "溫暖米色",
@@ -331,6 +395,38 @@ export const translations = {
     oss: "Alibaba OSS",
     netlify: "Netlify",
 
+    // Deploy Form Descriptions - GitHub
+    githubPageTitle: "Github Page",
+    githubPageDesc: "Deploy site with GitHub Pages",
+    repositoryDesc: "Your GitHub repository URL",
+    emailDesc: "Your GitHub email address",
+    usernameDesc: "Your GitHub username",
+    tokenDesc: "Your GitHub access token",
+    cnameDesc: "Your GitHub Pages custom domain",
+
+    // Deploy Form Descriptions - COS
+    cosTitle: "Tencent Cloud COS",
+    cosDesc: "Deploy site with Tencent Cloud COS",
+    secretIdDesc: "Your Tencent Cloud SecretId",
+    secretKeyDesc: "Your Tencent Cloud SecretKey",
+    regionDesc: "COS bucket region",
+    bucketDesc: "COS bucket name",
+
+    // Deploy Form Descriptions - OSS
+    ossTitle: "Alibaba Cloud OSS",
+    ossDesc: "Deploy site with Alibaba Cloud OSS",
+    appIdDesc: "Your Alibaba Cloud application ID",
+    ossSecretIdDesc: "Your Alibaba Cloud SecretId",
+    ossSecretKeyDesc: "Your Alibaba Cloud SecretKey",
+    ossRegionDesc: "OSS bucket region",
+    ossBucketDesc: "OSS bucket name",
+
+    // Deploy Form Descriptions - Netlify
+    netlifyTitle: "Netlify",
+    netlifyDesc: "Deploy site with Netlify",
+    siteIdDesc: "Your Netlify site ID",
+    netlifyTokenDesc: "Your Netlify access token",
+
     // Themes
     warmSepia: "Warm Sepia",
     warmSepiaDesc: "Warm beige color theme",
@@ -447,6 +543,38 @@ export const translations = {
     cos: "Tencent COS",
     oss: "Alibaba OSS",
     netlify: "Netlify",
+
+    // Deploy Form Descriptions - GitHub
+    githubPageTitle: "Github Page",
+    githubPageDesc: "GitHub Pagesでサイトをデプロイ",
+    repositoryDesc: "GitHubリポジトリのURL",
+    emailDesc: "GitHubメールアドレス",
+    usernameDesc: "GitHubユーザー名",
+    tokenDesc: "GitHubアクセストークン",
+    cnameDesc: "GitHub Pagesカスタムドメイン",
+
+    // Deploy Form Descriptions - COS
+    cosTitle: "Tencent Cloud COS",
+    cosDesc: "Tencent Cloud COSでサイトをデプロイ",
+    secretIdDesc: "Tencent Cloud SecretId",
+    secretKeyDesc: "Tencent Cloud SecretKey",
+    regionDesc: "COSバケットのリージョン",
+    bucketDesc: "COSバケット名",
+
+    // Deploy Form Descriptions - OSS
+    ossTitle: "Alibaba Cloud OSS",
+    ossDesc: "Alibaba Cloud OSSでサイトをデプロイ",
+    appIdDesc: "Alibaba Cloudアプリケーション ID",
+    ossSecretIdDesc: "Alibaba Cloud SecretId",
+    ossSecretKeyDesc: "Alibaba Cloud SecretKey",
+    ossRegionDesc: "OSSバケットのリージョン",
+    ossBucketDesc: "OSSバケット名",
+
+    // Deploy Form Descriptions - Netlify
+    netlifyTitle: "Netlify",
+    netlifyDesc: "Netlifyでサイトをデプロイ",
+    siteIdDesc: "NetlifyサイトID",
+    netlifyTokenDesc: "Netlifyアクセストークン",
 
     // Themes
     warmSepia: "ウォームセピア",
