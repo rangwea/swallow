@@ -22,6 +22,7 @@ body {
   border: none !important;
   @apply outline-none focus:outline-none;
   transition: all 0.3s ease;
+  font-family: var(--editor-title-font, 'Playfair Display', Georgia, serif) !important;
 }
 
 .editor-title-input:focus {
@@ -31,8 +32,8 @@ body {
 .w-md-editor {
   border: none !important;
   box-shadow: none !important;
-  font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-  line-height: 1.75 !important;
+  font-family: var(--editor-content-font, 'Instrument Sans', -apple-system, sans-serif) !important;
+  line-height: var(--editor-line-height, 1.75) !important;
   letter-spacing: 0.01em !important;
 }
 
@@ -58,9 +59,10 @@ body {
 
 .w-md-editor-text-input,
 .w-md-editor-text-pre > code {
-  font-size: 16px !important;
-  line-height: 1.75 !important;
+  font-size: var(--editor-font-size, 16px) !important;
+  line-height: var(--editor-line-height, 1.75) !important;
   color: hsl(var(--foreground) / 0.9) !important;
+  font-family: var(--editor-content-font, 'Instrument Sans', -apple-system, sans-serif) !important;
 }
 
 .w-md-editor-preview {
@@ -69,15 +71,17 @@ body {
 
 /* Markdown Preview Styling */
 .wmde-markdown {
-  font-family: 'Instrument Sans', -apple-system, sans-serif !important;
+  font-family: var(--editor-content-font, 'Instrument Sans', -apple-system, sans-serif) !important;
   color: hsl(var(--foreground) / 0.9) !important;
+  font-size: var(--editor-font-size, 16px) !important;
+  line-height: var(--editor-line-height, 1.75) !important;
 }
 
 .wmde-markdown h1,
 .wmde-markdown h2,
 .wmde-markdown h3,
 .wmde-markdown h4 {
-  font-family: 'Playfair Display', Georgia, serif !important;
+  font-family: var(--editor-title-font, 'Playfair Display', Georgia, serif) !important;
   font-weight: 600 !important;
   letter-spacing: -0.02em !important;
   color: hsl(var(--foreground)) !important;

@@ -4,64 +4,47 @@
 
 @layer base {
   :root {
-    /* Editorial Minimalism - Warm Sepia Theme */
+    /* Default theme values - will be overridden by JavaScript */
     --background: 42 40% 96%;
     --foreground: 25 25% 20%;
-
     --card: 40 35% 98%;
     --card-foreground: 25 25% 20%;
-
     --popover: 40 35% 98%;
     --popover-foreground: 25 25% 20%;
-
     --primary: 25 25% 20%;
     --primary-foreground: 42 40% 96%;
-
     --secondary: 38 30% 90%;
     --secondary-foreground: 25 25% 20%;
-
     --muted: 38 25% 88%;
     --muted-foreground: 25 15% 45%;
-
     --accent: 43 75% 60%;
     --accent-foreground: 25 25% 20%;
-
     --destructive: 0 70% 55%;
     --destructive-foreground: 42 40% 96%;
-
     --border: 38 20% 85%;
     --input: 38 20% 85%;
     --ring: 43 75% 60%;
-
     --radius: 0.75rem;
   }
 
   .dark {
-    /* Dark Editorial Theme */
+    /* Dark theme defaults - will be overridden by JavaScript */
     --background: 25 20% 12%;
     --foreground: 42 30% 92%;
-
     --card: 25 18% 15%;
     --card-foreground: 42 30% 92%;
-
     --popover: 25 18% 15%;
     --popover-foreground: 42 30% 92%;
-
     --primary: 42 30% 92%;
     --primary-foreground: 25 20% 12%;
-
     --secondary: 25 15% 20%;
     --secondary-foreground: 42 30% 92%;
-
     --muted: 25 12% 22%;
     --muted-foreground: 42 15% 60%;
-
     --accent: 43 70% 55%;
     --accent-foreground: 25 20% 12%;
-
     --destructive: 0 65% 50%;
     --destructive-foreground: 42 30% 92%;
-
     --border: 25 12% 25%;
     --input: 25 12% 25%;
     --ring: 43 70% 55%;

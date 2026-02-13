@@ -31,6 +31,7 @@ import { useForm } from "react-hook-form";
 import { TagInput } from "emblor";
 import { Toaster } from "@/components/ui/sonner";
 import { getCurrentTime, isSuccess } from "@/components/page/util";
+import { t } from "@/lib/i18n";
 
 function EditorPage() {
   const [params] = useSearchParams();
@@ -222,7 +223,7 @@ function EditorPage() {
           <div className="flex flex-col w-3/5 animate-slide-up">
             <input
               className="border-0 border-none shadow-none ring-0 focus:ring-0 h-14 text-3xl py-2 px-3 editor-title-input font-serif bg-transparent placeholder:text-muted-foreground/30 text-foreground/90"
-              placeholder="Your story title..."
+              placeholder={t("titlePlaceholder")}
               value={title}
               onChange={titleChange}
             ></input>
@@ -249,7 +250,7 @@ function EditorPage() {
               preview={preview}
               textareaProps={{
                 id: mdTextAreaId,
-                placeholder: "Write your story...",
+                placeholder: t("contentPlaceholder"),
               }}
             />
           </div>
@@ -264,7 +265,7 @@ function EditorPage() {
 
         <SheetContent className="backdrop-blur-md bg-card/95">
           <SheetHeader>
-            <SheetTitle className="font-serif text-2xl">Article Meta</SheetTitle>
+            <SheetTitle className="font-serif text-2xl">{t("articleMeta")}</SheetTitle>
           </SheetHeader>
           <Separator className="my-6 bg-border/50" />
           <Form {...form}>
@@ -274,12 +275,12 @@ function EditorPage() {
                 name="tags"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Tags</FormLabel>
+                    <FormLabel className="text-base font-medium">{t("tags")}</FormLabel>
                     <FormControl>
                       <TagInput
                         {...field}
                         tags={tags}
-                        placeholder="Enter a tag"
+                        placeholder={t("tagsPlaceholder")}
                         setTags={(newTags) => {
                           setTags(newTags);
                           form.setValue("tags", newTags);
@@ -302,10 +303,10 @@ function EditorPage() {
                 name="date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Date</FormLabel>
+                    <FormLabel className="text-base font-medium">{t("date")}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Create time"
+                        placeholder={t("createTime")}
                         {...field}
                         className="h-11 bg-background/50"
                       />
@@ -318,10 +319,10 @@ function EditorPage() {
                 name="lastmod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Lastmod</FormLabel>
+                    <FormLabel className="text-base font-medium">{t("lastmod")}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Last modify time"
+                        placeholder={t("updateTime")}
                         {...field}
                         className="h-11 bg-background/50"
                       />
