@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ConfGet, ConfSave } from "/wailsjs/go/backend/App";
+import { ConfGet, ConfSave, OpenLogDir, GetLogDir } from "/wailsjs/go/backend/App";
 import { isSuccess } from "@/components/page/util";
 import { APP_THEMES, applyTheme } from "@/lib/themes";
 import { t, LANGUAGES, setLanguage } from "@/lib/i18n";
@@ -23,6 +23,7 @@ import {
   loadGoogleFonts,
   getRequiredFonts,
 } from "@/lib/fonts";
+import { FolderOpen, FileText } from "lucide-react";
 
 function AppearanceSetting() {
   const [appTheme, setAppTheme] = useState("sepia");
@@ -33,10 +34,28 @@ function AppearanceSetting() {
   const [editorContentFont, setEditorContentFont] = useState("instrument-sans");
   const [editorLineHeight, setEditorLineHeight] = useState(1.75);
   const [editorFontSize, setEditorFontSize] = useState(16);
+  const [logDir, setLogDir] = useState("");
 
   useEffect(() => {
     init();
+    // 获取日志目录路径
+    GetLogDir().then((result) => {
+      if (isSuccess(result)) {
+        setLogDir(result.data);
+      }
+    });
   }, []);
+
+  function handleOpenLogDir() {
+    OpenLogDir().then((result) => {
+      if (!isSuccess(result)) {
+        toast.error(result.msg || t("openLogDirFailed"));
+      }
+    }).catch((err) => {
+      toast.error(t("openLogDirFailed"));
+      console.error("Error opening log directory:", err);
+    });
+  }
 
   function init() {
     ConfGet("app").then((result) => {
@@ -413,6 +432,42 @@ function AppearanceSetting() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Log Settings */}
+      <div className="space-y-4">
+        <div>
+          <Label className="text-lg font-serif font-semibold">
+            {t("logSettings")}
+          </Label>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t("logSettingsDesc")}
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <Label className="text-base font-medium">{t("logDir")}</Label>
+              <p className="text-sm text-muted-foreground mt-1 break-all">
+                {logDir || t("logDirNotFound")}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleOpenLogDir}
+              className="gap-2 shrink-0"
+            >
+              <FolderOpen className="w-4 h-4" />
+              {t("openLogDir")}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t("logDirHint")}
+          </p>
         </div>
       </div>
 

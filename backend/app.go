@@ -50,6 +50,10 @@ func (a *App) Startup(ctx context.Context) {
 
 	defer func() {
 		if r := recover(); r != nil {
+			// 记录 panic 到日志
+			if Log != nil {
+				Log.LogPanic(r)
+			}
 			rt.MessageDialog(a.ctx, rt.MessageDialogOptions{
 				Type:    rt.ErrorDialog,
 				Message: fmt.Sprintf("app crashed:\n%s", r),
@@ -66,12 +70,19 @@ func initialize() {
 	// global cons init
 	initAppHome()
 
+	// logger init (must be after initAppHome)
+	if err := InitLogger(); err != nil {
+		panic(fmt.Errorf("init logger fail: %w", err))
+	}
+
 	// db init
 	initDB()
 
 	// component init
 	Conf.Initialize()
 	Hugo.Initialize()
+
+	Log.Info("Application initialized successfully")
 }
 
 func initAppHome() {
@@ -390,6 +401,36 @@ func (a *App) GetSiteImageConf(imgPath string) *R {
 	})
 }
 
+// OpenLogDir 打开日志目录
+func (a *App) OpenLogDir() *R {
+	if Log == nil {
+		return fail(errors.New("logger not initialized"))
+	}
+
+	logDir := Log.GetLogDir()
+
+	// 检查目录是否存在
+	if _, err := os.Stat(logDir); os.IsNotExist(err) {
+		return fail(errors.New("log directory not found"))
+	}
+
+	// 使用系统默认方式打开目录
+	err := util.OpenPath(logDir)
+	if err != nil {
+		return fail(errors.Wrap(err, "failed to open log directory"))
+	}
+
+	return success(logDir)
+}
+
+// GetLogDir 获取日志目录路径
+func (a *App) GetLogDir() *R {
+	if Log == nil {
+		return fail(errors.New("logger not initialized"))
+	}
+	return success(Log.GetLogDir())
+}
+
 func saveArticleToDB(aidpr *string, meta Meta) error {
 	title := meta.Title
 	createTime := meta.Date
@@ -441,5 +482,9 @@ func success(data interface{}) *R {
 }
 
 func fail(err error) *R {
+	// 记录错误到日志
+	if Log != nil {
+		Log.LogError(err, "API Error")
+	}
 	return &R{Code: CodeError, Msg: err.Error()}
 }
