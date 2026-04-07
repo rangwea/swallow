@@ -290,8 +290,8 @@ function EditorPage() {
                         size={"md"}
                         animation={"fadeIn"}
                         styleClasses={{
-                          input: "h-11 bg-background/50",
-                          inlineTagsContainer: "pl-1",
+                          input: "border-0 shadow-none focus-visible:ring-0 bg-transparent",
+                          inlineTagsContainer: "pl-1 min-h-11 bg-background/50",
                         }}
                       />
                     </FormControl>
