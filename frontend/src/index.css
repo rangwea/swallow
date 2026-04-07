@@ -121,4 +121,63 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--accent) / 0.5);
   }
+
+  /* Editor styles */
+  .editor-md-container {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .editor-md-container .w-md-editor-content {
+    height: 100% !important;
+  }
+
+  .editor-md-container .w-md-editor-area {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .editor-md-container .w-md-editor-text-input,
+  .editor-md-container .w-md-editor-text-pre,
+  .editor-md-container .w-md-editor-text {
+    border: none !important;
+    box-shadow: none !important;
+    overflow-x: hidden !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .editor-md-container .w-md-editor-preview {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide scrollbar but keep scrolling functionality */
+  .editor-md-container .w-md-editor-text-input::-webkit-scrollbar,
+  .editor-md-container .w-md-editor-preview::-webkit-scrollbar,
+  .editor-md-container .w-md-editor-area::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+  }
+
+  .editor-md-container .w-md-editor-text-input,
+  .editor-md-container .w-md-editor-preview,
+  .editor-md-container .w-md-editor-area {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE and Edge */
+  }
+
+  /* Allow vertical scrolling only when content overflows */
+  .editor-md-container .w-md-editor-text-input {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  .editor-md-container .w-md-editor-preview {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
 }

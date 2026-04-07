@@ -11,7 +11,6 @@ import {
   ArticleInsertImage,
   ArticleInsertImageBlob,
 } from "/wailsjs/go/backend/App";
-import "../style.css";
 import {
   Sheet,
   SheetContent,
@@ -191,10 +190,10 @@ function EditorPage() {
 
   return (
     <Sheet key="right">
-      <div className="flex flex-col h-screen">
+      <div className="flex flex-col h-screen overflow-hidden">
         <Toaster position="top-center" />
         <div
-          className="flex justify-end w-full gap-2 border-b border-border/50 pr-6 py-3 backdrop-blur-sm bg-card/80"
+          className="flex justify-end w-full gap-2 border-b border-border/50 pr-6 py-3 backdrop-blur-sm bg-card/80 shrink-0"
           style={{ "--wails-draggable": "drag" }}
         >
           <Link to="/">
@@ -219,10 +218,10 @@ function EditorPage() {
             />
           </Button>
         </div>
-        <div className="flex justify-center items-center relative">
-          <div className="flex flex-col w-3/5 animate-slide-up">
+        <div className="flex justify-center relative flex-1 overflow-hidden">
+          <div className="flex flex-col w-3/5 animate-slide-up h-full">
             <input
-              className="border-0 border-none shadow-none ring-0 focus:ring-0 h-14 text-3xl py-2 px-3 editor-title-input font-serif bg-transparent placeholder:text-muted-foreground/30 text-foreground/90"
+              className="border-0 border-none shadow-none ring-0 focus:ring-0 focus:outline-none outline-none h-14 text-3xl py-2 px-3 editor-title-input font-serif bg-transparent placeholder:text-muted-foreground/30 text-foreground/90 shrink-0"
               placeholder={t("titlePlaceholder")}
               value={title}
               onChange={titleChange}
@@ -240,17 +239,26 @@ function EditorPage() {
                 e.preventDefault();
                 onImagePasted(e.dataTransfer);
               }}
+              className="editor-md-container"
               style={{
                 marginTop: 8,
-                marginBottom: 10,
                 border: "none",
+                boxShadow: "none",
+                flex: 1,
+                overflow: "hidden",
               }}
               hideToolbar={true}
-              height="calc(100vh - 120px)"
+              height="100%"
               preview={preview}
               textareaProps={{
                 id: mdTextAreaId,
                 placeholder: t("contentPlaceholder"),
+                style: {
+                  overflowX: "hidden",
+                  wordWrap: "break-word",
+                  whiteSpace: "pre-wrap",
+                  overflowWrap: "break-word",
+                },
               }}
             />
           </div>
