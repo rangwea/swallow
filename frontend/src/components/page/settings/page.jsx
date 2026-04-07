@@ -7,7 +7,6 @@ import SiteSetting from "@/components/page/settings/site";
 import AppearanceSetting from "@/components/page/settings/appearance";
 import { cn } from "@/lib/utils";
 import { CircleX } from "lucide-react";
-import "../style.css";
 import DeploySetting from "@/components/page/settings/deploy/layout";
 import { Toaster } from "@/components/ui/sonner";
 import { t } from "@/lib/i18n";
