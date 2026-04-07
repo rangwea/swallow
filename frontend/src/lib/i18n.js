@@ -147,6 +147,19 @@ export const translations = {
     saveSuccess: "保存成功",
     deploySuccess: "部署成功",
     error: "错误",
+
+    // Error Handling & Logs
+    errorOccurred: "出错了",
+    errorDescription: "应用遇到了一个错误，请尝试刷新页面",
+    errorStack: "查看详情",
+    refreshPage: "刷新页面",
+    openLogDir: "打开日志目录",
+    openLogDirFailed: "打开日志目录失败",
+    logSettings: "日志设置",
+    logSettingsDesc: "查看应用运行日志，用于排查问题",
+    logDir: "日志目录",
+    logDirNotFound: "日志目录未找到",
+    logDirHint: "日志文件按日期保存，保留最近 7 天的记录",
   },
 
   "zh-TW": {
@@ -296,6 +309,19 @@ export const translations = {
     saveSuccess: "儲存成功",
     deploySuccess: "部署成功",
     error: "錯誤",
+
+    // Error Handling & Logs
+    errorOccurred: "出錯了",
+    errorDescription: "應用遇到了一個錯誤，請嘗試刷新頁面",
+    errorStack: "查看詳情",
+    refreshPage: "刷新頁面",
+    openLogDir: "打開日誌目錄",
+    openLogDirFailed: "打開日誌目錄失敗",
+    logSettings: "日誌設定",
+    logSettingsDesc: "查看應用運行日誌，用於排查問題",
+    logDir: "日誌目錄",
+    logDirNotFound: "日誌目錄未找到",
+    logDirHint: "日誌文件按日期保存，保留最近 7 天的記錄",
   },
 
   "en": {
@@ -445,6 +471,19 @@ export const translations = {
     saveSuccess: "Saved successfully",
     deploySuccess: "Deployed successfully",
     error: "Error",
+
+    // Error Handling & Logs
+    errorOccurred: "Something went wrong",
+    errorDescription: "The application encountered an error. Please try refreshing the page.",
+    errorStack: "View details",
+    refreshPage: "Refresh Page",
+    openLogDir: "Open Log Directory",
+    openLogDirFailed: "Failed to open log directory",
+    logSettings: "Log Settings",
+    logSettingsDesc: "View application logs for troubleshooting",
+    logDir: "Log Directory",
+    logDirNotFound: "Log directory not found",
+    logDirHint: "Log files are saved daily and kept for the last 7 days",
   },
 
   "ja": {
@@ -594,6 +633,19 @@ export const translations = {
     saveSuccess: "正常に保存されました",
     deploySuccess: "正常にデプロイされました",
     error: "エラー",
+
+    // Error Handling & Logs
+    errorOccurred: "エラーが発生しました",
+    errorDescription: "アプリケーションでエラーが発生しました。ページを更新してください。",
+    errorStack: "詳細を表示",
+    refreshPage: "ページを更新",
+    openLogDir: "ログフォルダを開く",
+    openLogDirFailed: "ログフォルダを開けませんでした",
+    logSettings: "ログ設定",
+    logSettingsDesc: "トラブルシューティング用のアプリケーションログを表示",
+    logDir: "ログフォルダ",
+    logDirNotFound: "ログフォルダが見つかりません",
+    logDirHint: "ログファイルは日別に保存され、過去7日間保持されます",
   },
 };
 

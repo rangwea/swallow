@@ -10,6 +10,18 @@ import { initializeTheme } from '@/lib/themes'
 import { initializeLanguage } from '@/lib/i18n'
 import { ConfGet } from "/wailsjs/go/backend/App"
 import { applyEditorFonts, loadGoogleFonts, getRequiredFonts } from '@/lib/fonts'
+import ErrorBoundary from '@/components/ErrorBoundary'
+
+// Global error handler for uncaught errors
+window.onerror = function(message, source, lineno, colno, error) {
+  console.error("Global error:", { message, source, lineno, colno, error });
+  return false;
+};
+
+// Global handler for unhandled promise rejections
+window.onunhandledrejection = function(event) {
+  console.error("Unhandled promise rejection:", event.reason);
+};
 
 // Initialize theme and language on app load
 initializeTheme();
@@ -57,6 +69,8 @@ const router = createHashRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <RouterProvider router={router}></RouterProvider>
+    <ErrorBoundary>
+      <RouterProvider router={router}></RouterProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

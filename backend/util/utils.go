@@ -33,6 +33,17 @@ func OpenBrowser(uri string) error {
 	return cmd.Start()
 }
 
+// OpenPath 使用系统默认程序打开文件或目录
+func OpenPath(path string) error {
+	run, ok := commands[runtime.GOOS]
+	if !ok {
+		return fmt.Errorf("don't know how to open things on %s platform", runtime.GOOS)
+	}
+
+	cmd := exec.Command(run, path)
+	return cmd.Start()
+}
+
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
