@@ -54,6 +54,14 @@
 @layer base {
   * {
     @apply border-border;
+    /* Disable overscroll bounce effect globally for native app feel */
+    overscroll-behavior: none;
+  }
+
+  /* Disable overscroll bounce effect for native app feel */
+  html, body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: auto;
   }
 
   body {
@@ -72,6 +80,18 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Hide scrollbar but keep scrolling functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+    width: 0;
+    height: 0;
   }
 
   .animate-in {
@@ -174,10 +194,12 @@
   .editor-md-container .w-md-editor-text-input {
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    overscroll-behavior: none !important;
   }
 
   .editor-md-container .w-md-editor-preview {
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    overscroll-behavior: none !important;
   }
 }
