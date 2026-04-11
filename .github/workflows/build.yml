@@ -27,7 +27,7 @@ jobs:
           - os: macos-latest
             platform: darwin/universal
             output: swallow
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             platform: linux/amd64
             output: swallow-linux
     runs-on: ${{ matrix.os }}
@@ -36,32 +36,18 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup NodeJS
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
       - name: Cache Go modules
         uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
 
-      - uses: rangwea/wails-build-action@v1
+      - uses: dAppServer/wails-build-action@main
         with:
           build-name: ${{ matrix.output }}
           build-platform: ${{ matrix.platform }}
           go-version: 1.22.4
+          node-version: '20'
           package: false
 
       - if: runner.os == 'macOS'
