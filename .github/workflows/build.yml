@@ -27,7 +27,7 @@ jobs:
           - os: macos-latest
             platform: darwin/universal
             output: swallow
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             platform: linux/amd64
             output: swallow-linux
     runs-on: ${{ matrix.os }}
@@ -44,8 +44,12 @@ jobs:
       - name: Cache npm
         uses: actions/cache@v4
         with:
-          path: frontend/node_modules
+          path: ~/.npm
           key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
 
       - name: Cache Go modules
         uses: actions/cache@v4
