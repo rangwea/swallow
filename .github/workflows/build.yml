@@ -27,9 +27,6 @@ jobs:
           - os: macos-latest
             platform: darwin/universal
             output: swallow
-          - os: ubuntu-latest
-            platform: linux/amd64
-            output: swallow-linux
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +38,16 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+
+      - name: Reinstall frontend optional dependencies on Windows
+        if: runner.os == 'Windows'
+        working-directory: frontend
+        shell: pwsh
+        run: |
+          if (Test-Path node_modules) {
+            Remove-Item node_modules -Recurse -Force
+          }
+          npm install --include=optional --force
 
       - uses: dAppServer/wails-build-action@main
         with:
