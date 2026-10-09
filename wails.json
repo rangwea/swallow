@@ -2,7 +2,7 @@
     "$schema": "https://wails.io/schemas/config.v2.json",
     "name": "swallow",
     "outputfilename": "swallow",
-    "frontend:install": "npm install --force",
+    "frontend:install": "npm install --include=optional --force",
     "frontend:build": "npm run build",
     "frontend:dev:watcher": "npm run dev",
     "frontend:dev:serverUrl": "auto",
