@@ -231,7 +231,12 @@ func (a *App) ArticleGet(aid string) *R {
 }
 
 func (a *App) ArticleRemove(aids []string) *R {
-	_, err := DB.Exec(fmt.Sprintf("delete from t_article where id in(%s)", strings.Join(aids[:], ",")))
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(aids)), ",")
+	args := make([]interface{}, len(aids))
+	for i, aid := range aids {
+		args[i] = aid
+	}
+	_, err := DB.Exec(fmt.Sprintf("delete from t_article where id in(%s)", placeholders), args...)
 	if err != nil {
 		return fail(err)
 	}
