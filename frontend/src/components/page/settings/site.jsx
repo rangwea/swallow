@@ -250,7 +250,7 @@ function SiteSetting() {
           ></FormField>
           <SiteImageInput label="Avatar" type="avatar.png" />
           <SiteImageInput label="Favicon" type="favicon.ico" />
-          <Button type="submit">{t("save")}</Button>
+          <Button type="submit" variant="secondary">{t("save")}</Button>
         </form>
       </Form>
     </div>

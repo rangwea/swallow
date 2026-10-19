@@ -78,7 +78,7 @@ function NetlifySetting() {
               </FormItem>
             )}
           ></FormField>
-          <Button type="submit">Submit</Button>
+          <Button type="submit" variant="secondary">{t("saveChanges")}</Button>
         </form>
       </Form>
     </div>

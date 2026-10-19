@@ -1,10 +1,15 @@
-import React, { useEffect, useState, forwardRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { icons, Check, MoveLeft } from "lucide-react";
+import { Check, MoveLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import MDEditor from "@uiw/react-md-editor";
+import MarkdownBody from "./markdown-body";
+import InsertTools from "./insert-tools";
+import FloatingToolbar, { readToolbarDock } from "@/components/layout/floating-toolbar";
+import { toast } from "sonner";
+import WindowHeader from "@/components/layout/window-header";
+import ToolBtn from "@/components/layout/tool-button";
 import {
   ArticleSave,
   ArticleGet,
@@ -14,7 +19,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -34,19 +38,23 @@ import { t } from "@/lib/i18n";
 
 function EditorPage() {
   const [params] = useSearchParams();
-  const [id, setId] = useState(params.get("id"));
+  const requestedId = params.get("id");
+  const [id, setId] = useState(requestedId);
 
-  // article vars
-  const [title, setTitle] = useState(); // title
-  const [content, setContent] = useState(""); // content
-
-  // preview button vars
+  const [title, setTitle] = useState("");
+  const bodyRef = useRef(null);
+  const revision = useRef(0);
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loading, setLoading] = useState(Boolean(id));
+  const [dock, setDock] = useState(readToolbarDock);
   const [preview, setPreview] = useState("edit");
-  const [previewIcon, setPreviewIcon] = useState("Eye");
-
-  const mdTextAreaId = "mdTextArea";
-
   const [changed, setChanged] = useState(false);
+  const markChanged = useCallback(() => {
+    revision.current += 1;
+    setChanged(true);
+  }, []);
 
   const form = useForm();
 
@@ -54,49 +62,67 @@ function EditorPage() {
   const [activeTagIndex, setActiveTagIndex] = useState(null);
 
   useEffect(() => {
-    init();
-  }, []);
-
-  function init() {
-    if (id) {
-      // existed id，edit
-      ArticleGet(id).then((result) => {
+    let cancelled = false;
+    setId(requestedId);
+    setLoading(Boolean(requestedId));
+    setLoadFailed(false);
+    setChanged(false);
+    setTitle("");
+    setTags([]);
+    form.reset({ tags: [], date: getCurrentTime(), lastmod: getCurrentTime() });
+    bodyRef.current?.setValue("");
+    if (requestedId) {
+      ArticleGet(requestedId).then((result) => {
+        if (cancelled) return;
         if (!isSuccess(result)) {
+          setLoadFailed(true);
           return;
         }
-        let meta = result.data.meta;
-        setTitle(meta.title);
-        setContent(result.data.content);
-        if (meta.tags) {
-          form.setValue(
-            "tags",
-            meta.tags.map((e) => ({
-              text: e
-            }))
-          );
-        }
-        form.setValue("date", meta.date);
-        form.setValue("lastmod", meta.lastmod);
-      });
-    } else {
-      let curDate = getCurrentTime();
-      form.setValue("date", curDate);
-      form.setValue("lastmod", curDate);
+        const meta = result.data.meta;
+        const loadedTags = (meta.tags || []).map((text) => ({ id: text, text }));
+        setTitle(meta.title || "");
+        bodyRef.current?.setValue(result.data.content || "");
+        setTags(loadedTags);
+        form.reset({ tags: loadedTags, date: meta.date || "", lastmod: meta.lastmod || "" });
+      }).catch(() => {
+        if (!cancelled) { setLoadFailed(true); toast.error(t("editorLoadFailed")); }
+      }).finally(() => { if (!cancelled) setLoading(false); });
+    }
+    return () => { cancelled = true; };
+  }, [requestedId, form]);
+
+  async function save() {
+    if (savingRef.current || loading || loadFailed) return;
+    savingRef.current = true;
+    setSaving(true);
+    const savedRevision = revision.current;
+    try {
+      const r = await ArticleSave(id || "", getMeta(), bodyRef.current?.getValue() || "");
+      if (isSuccess(r)) {
+        setId(r.data);
+        if (revision.current === savedRevision) setChanged(false);
+      }
+    } catch {
+      toast.error(t("editorSaveFailed"));
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   }
 
-  function save(e) {
-    let meta = getMeta();
-    ArticleSave(id, meta, content).then((r) => {
-      if (isSuccess(r)) {
-        setId(r.data);
-        setChanged(false);
+  useEffect(() => {
+    function onKeyDown(event) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        save();
       }
-    });
-  }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
 
   function getMeta() {
-    let meta = form.getValues();
+    let meta = { ...form.getValues() };
     meta["title"] = title;
     if (meta["tags"]) {
       meta["tags"] = meta["tags"].map((e) => e.text);
@@ -104,100 +130,46 @@ function EditorPage() {
     return meta;
   }
 
-  function insertImage() {
-    ArticleInsertImage(id).then((r) => {
-      insertImageTextToArea(r);
-    });
-  }
-
-  function insertImageTextToArea(r) {
-    if (isSuccess(r)) {
-      const md = insertToTextArea(`![](${r.data})\n`);
-      setContent(md);
+  async function insertImage() {
+    try {
+      const r = await ArticleInsertImage(id || "");
+      if (isSuccess(r)) insertImageText(r.data);
+    } catch {
+      toast.error(t("editorImageFailed"));
     }
   }
 
-  function contentChange(c) {
-    setChanged(true);
-    setContent(c);
+  function insertImageText(path) {
+    setPreview((mode) => mode === "preview" ? "edit" : mode);
+    bodyRef.current?.insert(`![](${path})\n`);
   }
 
-  function previewToggle() {
-    if (preview === "edit") {
-      setPreview("preview");
-      setPreviewIcon("FilePenLine");
-    } else {
-      setPreview("edit");
-      setPreviewIcon("Eye");
+  async function onImagePasted(file) {
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const r = await ArticleInsertImageBlob(id || "", `[${bytes.toString()}]`);
+      if (isSuccess(r)) insertImageText(r.data);
+    } catch {
+      toast.error(t("editorImageFailed"));
     }
-  }
-
-  function insertToTextArea(insertString) {
-    const textarea = document.getElementById(mdTextAreaId);
-    if (!textarea) {
-      return null;
-    }
-
-    let sentence = textarea.value;
-    const len = sentence.length;
-    const pos = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-
-    const front = sentence.slice(0, pos);
-    const back = sentence.slice(pos, len);
-
-    sentence = front + insertString + back;
-
-    textarea.value = sentence;
-    textarea.selectionEnd = end + insertString.length;
-
-    return sentence;
-  }
-
-  function onImagePasted(dataTransfer) {
-    const file = dataTransfer.files.item(0);
-    Promise.resolve(file.arrayBuffer()).then((ab) => {
-      const u = new Uint8Array(ab);
-      ArticleInsertImageBlob(id, `[${u.toString()}]`).then((r) => {
-        insertImageTextToArea(r);
-      });
-    });
   }
 
   function titleChange(e) {
-    setChanged(true);
+    markChanged();
     setTitle(e.target.value);
   }
 
-  function metaChange() {
-    setChanged(true);
-  }
-
-  const ToolBtn = forwardRef((props, ref) => {
-    const {icon, onClick} = props
-    const LucideIcon = icons[icon];
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="w-10 h-10 hover:bg-accent/20 hover:scale-110 transition-all duration-300 hover:shadow-md rounded-full backdrop-blur-sm bg-card/50 border border-border/30"
-        onClick={onClick}
-      >
-        <LucideIcon size="20" className="text-foreground/70" strokeWidth={1.75} />
-      </Button>
-    );
-  });
+  const statusText = t(loadFailed ? "editorLoadFailed" : loading ? "editorLoading" : saving ? "editorSaving" : changed ? "editorUnsaved" : "editorSaved");
 
   return (
     <Sheet key="right">
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="editor-shell flex flex-col h-screen overflow-hidden" data-dock={dock}>
         <Toaster position="top-center" />
-        <div
-          className="flex justify-end w-full gap-2 border-b border-border/50 pr-6 py-3 backdrop-blur-sm bg-card/80 shrink-0"
-          style={{ "--wails-draggable": "drag" }}
-        >
+        <WindowHeader />
+        <FloatingToolbar edge={dock} onDock={setDock}>
           <Link to="/">
             <Button
+              aria-label={t("editorBack")}
               variant="ghost"
               size="icon"
               className="w-10 h-10 hover:bg-accent/20 hover:scale-110 transition-all duration-300 rounded-full"
@@ -205,10 +177,27 @@ function EditorPage() {
               <MoveLeft size="20" className="text-foreground/70" strokeWidth={1.75} />
             </Button>
           </Link>
+          <div className="editor-mode-switch" role="group" aria-label={t("editorMode")}>
+            {["edit", "live", "preview"].map((mode) => (
+              <Button key={mode} variant={preview === mode ? "secondary" : "ghost"}
+                size="sm" aria-pressed={preview === mode} onClick={() => setPreview(mode)}>
+                {t(mode === "live" ? "editorSplit" : mode === "edit" ? "editorEdit" : "preview")}
+              </Button>
+            ))}
+          </div>
+          <span className="editor-save-status text-xs text-muted-foreground" role="status" title={statusText}>
+            {statusText}
+          </span>
+          <InsertTools bodyRef={bodyRef} disabled={loading || loadFailed || preview === "preview"} onInserted={() => setPreview((mode) => mode === "preview" ? "edit" : mode)} />
+          <ToolBtn icon="Image" label={t("editorInsertImage")} onClick={insertImage} disabled={loading || loadFailed} />
+          <SheetTrigger asChild><ToolBtn icon="Settings" label={t("articleMeta")} /></SheetTrigger>
           <Button
+            aria-label={t("editorSave")}
+            title={t("editorSave") + " (⌘/Ctrl+S)"}
+            disabled={saving || loading || loadFailed}
             variant="ghost"
             size="icon"
-            className="w-10 h-10 hover:scale-110 transition-all duration-300 rounded-full"
+            className="w-10 h-10 rounded-full"
             onClick={save}
           >
             <Check
@@ -217,58 +206,18 @@ function EditorPage() {
               strokeWidth={2}
             />
           </Button>
-        </div>
-        <div className="flex justify-center relative flex-1 overflow-hidden">
-          <div className="flex flex-col w-3/5 animate-slide-up h-full">
-            <input
-              className="border-0 border-none shadow-none ring-0 focus:ring-0 focus:outline-none outline-none h-14 text-3xl py-2 px-3 editor-title-input font-serif bg-transparent placeholder:text-muted-foreground/30 text-foreground/90 shrink-0"
-              placeholder={t("titlePlaceholder")}
-              value={title}
-              onChange={titleChange}
-            ></input>
-            <MDEditor
-              value={content}
-              onChange={contentChange}
-              onPaste={(e) => {
-                if (e.clipboardData.files.length > 0) {
-                  e.preventDefault();
-                  onImagePasted(e.clipboardData);
-                }
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                onImagePasted(e.dataTransfer);
-              }}
-              className="editor-md-container"
-              style={{
-                marginTop: 8,
-                border: "none",
-                boxShadow: "none",
-                flex: 1,
-                overflow: "hidden",
-              }}
-              hideToolbar={true}
-              height="100%"
-              preview={preview}
-              textareaProps={{
-                id: mdTextAreaId,
-                placeholder: t("contentPlaceholder"),
-                style: {
-                  overflowX: "hidden",
-                  wordWrap: "break-word",
-                  whiteSpace: "pre-wrap",
-                  overflowWrap: "break-word",
-                },
-              }}
-            />
-          </div>
-          <div className="fixed top-1/2 right-4 transform -translate-y-1/2 h-auto flex flex-col gap-3">
-            <ToolBtn icon="Image" onClick={insertImage}></ToolBtn>
-            <ToolBtn icon={previewIcon} onClick={previewToggle}></ToolBtn>
-            <SheetTrigger asChild>
-              <ToolBtn icon="Settings"></ToolBtn>
-            </SheetTrigger>
-          </div>
+        </FloatingToolbar>
+        <div className={`editor-workspace editor-workspace-${preview}`}>
+          <input
+            className="editor-title-input"
+            aria-label={t("titlePlaceholder")}
+            placeholder={t("titlePlaceholder")}
+            value={title}
+            disabled={loading || loadFailed}
+            onChange={titleChange}
+          />
+          <MarkdownBody ref={bodyRef} mode={preview} disabled={loading || loadFailed}
+            onDirty={markChanged} onImage={onImagePasted} />
         </div>
 
         <SheetContent className="backdrop-blur-md bg-card/95">
@@ -292,6 +241,7 @@ function EditorPage() {
                         setTags={(newTags) => {
                           setTags(newTags);
                           form.setValue("tags", newTags);
+                          markChanged();
                         }}
                         activeTagIndex={activeTagIndex}
                         setActiveTagIndex={setActiveTagIndex}
@@ -316,6 +266,7 @@ function EditorPage() {
                       <Input
                         placeholder={t("createTime")}
                         {...field}
+                        onChange={(event) => { field.onChange(event); markChanged(); }}
                         className="h-11 bg-background/50"
                       />
                     </FormControl>
@@ -332,6 +283,7 @@ function EditorPage() {
                       <Input
                         placeholder={t("updateTime")}
                         {...field}
+                        onChange={(event) => { field.onChange(event); markChanged(); }}
                         className="h-11 bg-background/50"
                       />
                     </FormControl>

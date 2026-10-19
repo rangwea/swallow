@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
-  icons,
   ChevronsLeft,
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
-  Trash2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -22,6 +20,8 @@ import {
 } from "/wailsjs/go/backend/App";
 import { isSuccess, checkError, checkResult } from "@/components/page/util";
 import { t } from "@/lib/i18n";
+import { toggleFromWindowHeader } from "@/components/layout/window-header";
+import ToolButton from "@/components/layout/tool-button";
 
 function Home() {
   const [articles, setArticles] = useState([]);
@@ -30,6 +30,18 @@ function Home() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef(null);
+  const searchToggleRef = useRef(null);
+  useEffect(() => {
+    if (!searchOpen) return;
+    searchRef.current?.querySelector("input")?.focus();
+    function dismiss(event) {
+      if (!searchRef.current?.contains(event.target) && !searchToggleRef.current?.contains(event.target)) setSearchOpen(false);
+    }
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, [searchOpen]);
   const [articlesPerPage, setArticlesPerPage] = useState(10);
   const [showArticlesStats, setShowArticlesStats] = useState(true);
   const navigate = useNavigate();
@@ -51,7 +63,6 @@ function Home() {
 
   useEffect(() => {
     loadAppearanceSettings();
-    doSearch();
   }, []);
 
   function loadAppearanceSettings() {
@@ -116,104 +127,69 @@ function Home() {
   }
 
   function calPage() {
-    return Math.ceil(total / articlesPerPage) - 1;
+    return Math.max(0, Math.ceil(total / articlesPerPage) - 1);
   }
   
-  const IBtn = ({ icon, onClick }) => {
-    const LucideIcon = icons[icon];
-    return (
-      <Button
-        className="m-1 w-9 h-9 hover:bg-accent/20 hover:scale-110 transition-all duration-300 hover:shadow-sm"
-        variant="ghost"
-        size="icon"
-        onClick={onClick}
-      >
-        <LucideIcon size="20" className="text-foreground/70" strokeWidth={1.75} />
-      </Button>
-    );
-  };
-
   return (
     <>
       <Toaster position="top-center" />
-      <div className="flex flex-col h-screen bg-gradient-to-br from-background via-background to-secondary/10">
-        {/* header */}
-        <div
-          className="flex items-center py-4 px-8 backdrop-blur-md bg-card/60 border-b border-border/30 relative overflow-hidden"
-          style={{ "--wails-draggable": "drag" }}
-        >
-          {/* Decorative accent line */}
-          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-accent/40 to-transparent"></div>
-
-          <div className="flex-1"></div>
-
-          <div className="flex-1 flex items-center justify-center gap-3 max-w-md mx-auto">
-            <Input
-              placeholder={t("searchPlaceholder")}
-              className="h-11 bg-background/70 border-border/40 focus:border-accent transition-all duration-300 placeholder:text-muted-foreground/40 shadow-sm"
-              onKeyDown={enterSearch}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {deleteBtnShow ? (
-              <Button
-                className="w-11 h-11 hover:bg-destructive/15 hover:text-destructive transition-all duration-300 hover:rotate-6"
-                variant="ghost"
-                size="icon"
-                onClick={removeArticle}
-              >
-                <Trash2 size="20" strokeWidth={1.75} />
-              </Button>
-            ) : null}
+      <div className="home-shell flex flex-col h-screen overflow-hidden">
+        <header className="home-fixed-header" style={{ "--wails-draggable": "drag" }} onDoubleClick={toggleFromWindowHeader}>
+          <div className="home-header-spacer" aria-hidden="true" />
+          <div ref={searchRef} id="home-search-field" className={`home-search${searchOpen ? " is-open" : ""}`}
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && searchOpen) {
+                event.stopPropagation(); setSearchOpen(false); searchToggleRef.current?.focus();
+              }
+            }}>
+            <Input aria-label={t("searchPlaceholder")} placeholder={t("searchPlaceholder")}
+              value={search} onKeyDown={enterSearch}
+              onChange={(event) => setSearch(event.target.value)} />
+            <ToolButton className="home-search-button" icon="Search" label={t("searchPlaceholder")} onClick={doSearch} />
           </div>
-
-          <div className="flex-1 flex justify-end gap-2">
-            <Link to="/editor">
-              <IBtn icon="SquarePlus" />
-            </Link>
-            <IBtn icon="View" onClick={preview} />
-            <IBtn icon="Rocket" onClick={deploy} />
-            <Link to="/settings">
-              <IBtn icon="Settings" />
-            </Link>
+          <ToolButton ref={searchToggleRef} className="home-search-toggle home-action-button" icon="Search"
+            label={t("searchPlaceholder")} aria-controls="home-search-field" aria-expanded={searchOpen}
+            onClick={() => setSearchOpen((open) => !open)} />
+          <div className="home-header-actions" role="group" aria-label={t("homeActions")}>
+            {deleteBtnShow && <ToolButton className="home-action-button home-action-delete" icon="Trash2" label={t("deleteSelected")} onClick={removeArticle} />}
+            <Link to="/editor"><ToolButton className="home-action-button home-action-primary" icon="SquarePlus" label={t("newArticle")} /></Link>
+            <ToolButton className="home-action-button" icon="View" label={t("preview")} onClick={preview} />
+            <ToolButton className="home-action-button" icon="Rocket" label={t("deploy")} onClick={deploy} />
+            <Link to="/settings"><ToolButton className="home-action-button" icon="Settings" label={t("settings")} /></Link>
           </div>
-        </div>
-        {/* header */}
-
-        {/* body */}
-        <div className="flex-grow overflow-auto scrollbar-hide px-16 py-10">
+        </header>
+        <div className="home-content flex-1 min-h-0 overflow-auto px-8 py-6">
           {/* Stats Bar - conditionally rendered */}
           {showArticlesStats && (
-            <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/30">
-              <div className="flex items-baseline gap-3">
-                <span className="text-5xl font-serif text-foreground/90 tabular-nums">{total}</span>
-                <span className="text-base text-muted-foreground tracking-wider uppercase">{t("articlesCount")}</span>
+            <div className="home-article-stats">
+              <div className="home-article-count">
+                <span className="home-article-total">{total}</span>
+                <span className="home-article-count-label">{t("articlesCount")}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="home-article-page-label">
                 <span>{t("page")} {page + 1} {t("of")} {calPage() + 1}</span>
               </div>
             </div>
           )}
 
           {/* Article Grid */}
-          <div className="grid grid-cols-1 gap-6 pb-8">
-            {articles.map((item, index) => {
+          <div className="article-list">
+            {articles.map((item) => {
               // Split tags by comma
               const tagList = item.tags ? item.tags.split(',').filter(t => t.trim()) : [];
 
               return (
                 <div
-                  className="group relative flex items-center border border-border/40 rounded-2xl py-6 px-8 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:shadow-xl hover:scale-[1.005] hover:border-accent/30 transition-all duration-500 cursor-pointer animate-in overflow-hidden gap-6"
-                  style={{ animationDelay: `${index * 60}ms` }}
+                  className="article-row group"
                   onClick={() => navigate("/editor?id=" + item.id)}
                   key={item.id}
                 >
-                  {/* Decorative gradient on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent/0 via-accent/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-
                   {/* Checkbox */}
                   <div className="flex-none z-10" onClick={e => e.stopPropagation()}>
                     <Checkbox
-                      className="border-2 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                      aria-label={item.title}
+                      checked={checked.includes(String(item.id))}
+                      className="article-checkbox data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                       onCheckedChange={(e) => checkedChange(e, item.id + "")}
                     />
                   </div>
@@ -221,19 +197,19 @@ function Home() {
                   {/* Content: Two rows */}
                   <div className="flex-1 z-10 min-w-0">
                     {/* Row 1: Title */}
-                    <h2 className="text-2xl font-serif text-foreground/90 group-hover:text-accent transition-colors duration-400 leading-tight mb-2 truncate">
+                    <h2 className="article-title" title={item.title}>
                       {item.title}
                     </h2>
 
                     {/* Row 2: Tags + Time */}
-                    <div className="flex items-center gap-4 flex-wrap">
+                    <div className="article-meta">
                       {/* Tags */}
                       {tagList.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="article-tags">
                           {tagList.map((tag, idx) => (
                             <span
                               key={idx}
-                              className="px-2.5 py-1 rounded-lg bg-accent/10 text-accent/90 text-xs font-medium tracking-wide uppercase border border-accent/20 hover:bg-accent/20 transition-colors duration-300"
+                              className="article-tag" title={tag.trim()}
                             >
                               {tag.trim()}
                             </span>
@@ -242,21 +218,21 @@ function Home() {
                       )}
 
                       {/* Time info */}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
-                        <div className="flex items-center gap-1.5">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
+                      <div className="article-times" title={[item.createTime, item.updateTime].filter(Boolean).join(" / ")}>
+                        <div className="article-time">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                           </svg>
-                          <span className="tracking-wider">{item.createTime}</span>
+                          <span className="article-date">{item.createTime}</span>
                         </div>
 
                         {item.updateTime && item.updateTime !== item.createTime && (
-                          <div className="flex items-center gap-1.5">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
+                          <div className="article-time">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
                               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
                             </svg>
-                            <span className="tracking-wider">{item.updateTime}</span>
+                            <span className="article-date">{item.updateTime}</span>
                           </div>
                         )}
                       </div>
@@ -264,14 +240,12 @@ function Home() {
                   </div>
 
                   {/* Right: Arrow indicator */}
-                  <div className="flex-none z-10 text-muted-foreground/30 group-hover:text-accent group-hover:translate-x-1 transition-all duration-300">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="article-arrow">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                   </div>
 
-                  {/* Bottom decorative line */}
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-accent via-accent/50 to-transparent group-hover:w-full transition-all duration-700 ease-out"></div>
                 </div>
               );
             })}
@@ -279,53 +253,39 @@ function Home() {
         </div>
         {/* body */}
 
-        {/* footer */}
-        <div className="flex items-center w-full py-4 px-8 backdrop-blur-md bg-card/60 border-t border-border/30">
-          <div className="flex-1"></div>
-          <div className="flex justify-center gap-2">
-            <Button
-              className="h-9 w-14 hover:bg-accent/15 hover:text-accent transition-all duration-300 disabled:opacity-30"
-              variant="ghost"
-              size="icon"
-              onClick={() => pageSearch("first")}
-              disabled={page === 0}
-            >
-              <ChevronsLeft strokeWidth={1.75} size={20} />
-            </Button>
-            <Button
-              className="h-9 w-14 hover:bg-accent/15 hover:text-accent transition-all duration-300 disabled:opacity-30"
-              variant="ghost"
-              size="icon"
-              onClick={() => pageSearch("prev")}
-              disabled={page === 0}
-            >
-              <ChevronLeft strokeWidth={1.75} size={20} />
-            </Button>
-            <div className="flex items-center px-4 text-sm font-medium text-foreground/70 min-w-[80px] justify-center">
-              {page + 1} / {calPage() + 1}
+        <footer className="home-footer">
+          <nav className="home-pagination" aria-label={t("pagination")}>
+            <div className="home-page-controls">
+              <Button className="home-page-button" variant="ghost" size="icon"
+                aria-label={t("firstPage")} title={t("firstPage")}
+                onClick={() => pageSearch("first")} disabled={page === 0}>
+                <ChevronsLeft strokeWidth={1.75} size={17} />
+              </Button>
+              <Button className="home-page-button" variant="ghost" size="icon"
+                aria-label={t("previousPage")} title={t("previousPage")}
+                onClick={() => pageSearch("prev")} disabled={page === 0}>
+                <ChevronLeft strokeWidth={1.75} size={18} />
+              </Button>
             </div>
-            <Button
-              className="h-9 w-14 hover:bg-accent/15 hover:text-accent transition-all duration-300 disabled:opacity-30"
-              variant="ghost"
-              size="icon"
-              onClick={() => pageSearch("next")}
-              disabled={page >= calPage()}
-            >
-              <ChevronRight strokeWidth={1.75} size={20} />
-            </Button>
-            <Button
-              className="h-9 w-14 hover:bg-accent/15 hover:text-accent transition-all duration-300 disabled:opacity-30"
-              variant="ghost"
-              size="icon"
-              onClick={() => pageSearch("last")}
-              disabled={page >= calPage()}
-            >
-              <ChevronsRight strokeWidth={1.75} size={20} />
-            </Button>
-          </div>
-          <div className="flex-1"></div>
-        </div>
-        {/* footer */}
+            <div className="home-page-position" role="status" aria-live="polite" aria-atomic="true">
+              <span className="home-current-page">{page + 1}</span>
+              <span className="home-page-separator">/</span>
+              <span>{calPage() + 1}</span>
+            </div>
+            <div className="home-page-controls">
+              <Button className="home-page-button" variant="ghost" size="icon"
+                aria-label={t("nextPage")} title={t("nextPage")}
+                onClick={() => pageSearch("next")} disabled={page >= calPage()}>
+                <ChevronRight strokeWidth={1.75} size={18} />
+              </Button>
+              <Button className="home-page-button" variant="ghost" size="icon"
+                aria-label={t("lastPage")} title={t("lastPage")}
+                onClick={() => pageSearch("last")} disabled={page >= calPage()}>
+                <ChevronsRight strokeWidth={1.75} size={17} />
+              </Button>
+            </div>
+          </nav>
+        </footer>
       </div>
     </>
   );

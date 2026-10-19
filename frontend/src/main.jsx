@@ -29,7 +29,7 @@ initializeLanguage();
 
 // Initialize editor fonts
 ConfGet("app").then((result) => {
-  if (result.code === 0 && result.data) {
+  if (result.code === 1 && result.data) {
     const { editorTitleFont, editorContentFont, editorLineHeight, editorFontSize } = result.data;
     if (editorTitleFont || editorContentFont) {
       applyEditorFonts({

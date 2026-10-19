@@ -272,18 +272,16 @@ func (a *App) ArticleInsertImage(aid string) *R {
 	return success(sitePath)
 }
 
-func (a *App) ArticleInsertImageBlob(aid int, blob string) *R {
+func (a *App) ArticleInsertImageBlob(aid string, blob string) *R {
 	var file []byte
 	if err := json.Unmarshal([]byte(blob), &file); err != nil {
 		return fail(err)
 	}
 
-	aida := strconv.Itoa(aid)
-
-	imageDir := Hugo.GetArticleImageDir(aida)
+	imageDir := Hugo.GetArticleImageDir(aid)
 	os.Mkdir(imageDir, os.ModePerm)
 
-	localPath, sitePath := Hugo.GenArticleImagePath(aida)
+	localPath, sitePath := Hugo.GenArticleImagePath(aid)
 	err := os.WriteFile(localPath, file, os.ModePerm)
 	if err != nil {
 		return fail(err)

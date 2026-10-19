@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { ConfGet, ConfSave, OpenLogDir, GetLogDir } from "/wailsjs/go/backend/App";
 import { isSuccess } from "@/components/page/util";
 import { APP_THEMES, applyTheme } from "@/lib/themes";
-import { t, LANGUAGES, setLanguage } from "@/lib/i18n";
+import { t, LANGUAGES, setLanguage, getCurrentLanguage } from "@/lib/i18n";
 import {
   FONT_OPTIONS,
   LINE_HEIGHT_OPTIONS,
@@ -26,7 +26,8 @@ import {
 import { FolderOpen, FileText } from "lucide-react";
 
 function AppearanceSetting() {
-  const [appTheme, setAppTheme] = useState("sepia");
+  const savedTheme = useRef(localStorage.getItem("app-theme") || "sepia");
+  const [appTheme, setAppTheme] = useState(savedTheme.current);
   const [articlesPerPage, setArticlesPerPage] = useState(10);
   const [showArticlesStats, setShowArticlesStats] = useState(true);
   const [language, setLanguageState] = useState("zh-CN");
@@ -46,6 +47,8 @@ function AppearanceSetting() {
     });
   }, []);
 
+  useEffect(() => () => applyTheme(savedTheme.current), []);
+
   function handleOpenLogDir() {
     OpenLogDir().then((result) => {
       if (!isSuccess(result)) {
@@ -62,7 +65,8 @@ function AppearanceSetting() {
       if (isSuccess(result)) {
         const data = result.data;
         if (data) {
-          setAppTheme(data.appTheme || "sepia");
+          savedTheme.current = data.appTheme || "sepia";
+          setAppTheme(savedTheme.current);
           setArticlesPerPage(data.articlesPerPage || 10);
           setShowArticlesStats(
             data.showArticlesStats !== undefined ? data.showArticlesStats : true
@@ -80,7 +84,8 @@ function AppearanceSetting() {
   function save() {
     // Get existing config first
     ConfGet("app").then((existingResult) => {
-      const existingData = (isSuccess(existingResult) && existingResult.data) ? existingResult.data : {};
+      if (!isSuccess(existingResult)) return;
+      const existingData = existingResult.data || {};
 
       // Merge with new values
       const conf = {
@@ -104,7 +109,9 @@ function AppearanceSetting() {
 
           // Apply theme immediately
           applyTheme(appTheme);
+          const languageChanged = language !== getCurrentLanguage();
           setLanguage(language);
+          savedTheme.current = appTheme;
           applyEditorFonts({
             titleFont: editorTitleFont,
             contentFont: editorContentFont,
@@ -122,9 +129,7 @@ function AppearanceSetting() {
           }
 
           // Reload page to apply language changes
-          setTimeout(() => {
-            window.location.reload();
-          }, 800);
+          if (languageChanged) setTimeout(() => window.location.reload(), 800);
         } else {
           toast.error(result.msg || t("settingsFailed"));
         }
@@ -200,10 +205,10 @@ function AppearanceSetting() {
 
         <div className="grid grid-cols-1 gap-3">
           {APP_THEMES.map((theme) => (
-            <div
+            <button type="button" aria-label={t(theme.nameKey)} aria-pressed={appTheme === theme.id}
               key={theme.id}
-              onClick={() => setAppTheme(theme.id)}
-              className={`relative flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
+              onClick={() => { setAppTheme(theme.id); applyTheme(theme.id); }}
+              className={`relative text-left flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
                 appTheme === theme.id
                   ? "border-accent bg-accent/5 shadow-sm"
                   : "border-border/40 hover:border-accent/50 hover:bg-accent/5"
@@ -233,9 +238,9 @@ function AppearanceSetting() {
 
               {/* Theme Info */}
               <div className="flex-1">
-                <div className="font-medium">{t(theme.id.replace("-", ""))}</div>
+                <div className="font-medium">{t(theme.nameKey)}</div>
                 <div className="text-sm text-muted-foreground">
-                  {t(theme.id.replace("-", "") + "Desc")}
+                  {t(theme.nameKey + "Desc")}
                 </div>
               </div>
 
@@ -257,7 +262,7 @@ function AppearanceSetting() {
                   </svg>
                 </div>
               )}
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -475,7 +480,7 @@ function AppearanceSetting() {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button onClick={save} className="px-8">
+        <Button onClick={save} variant="secondary" className="px-6">
           {t("saveChanges")}
         </Button>
       </div>
