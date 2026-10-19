@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { TagInput } from "emblor";
-import { Toaster } from "@/components/ui/sonner";
 import { getCurrentTime, isSuccess } from "@/components/page/util";
 import { t } from "@/lib/i18n";
 
@@ -164,7 +163,6 @@ function EditorPage() {
   return (
     <Sheet key="right">
       <div className="editor-shell flex flex-col h-screen overflow-hidden" data-dock={dock}>
-        <Toaster position="top-center" />
         <WindowHeader />
         <FloatingToolbar edge={dock} onDock={setDock}>
           <Link to="/">

@@ -1,0 +1,21 @@
+{
+  "mini/layouts/404.html": "9742ae908f45360334bd943e41fa8a1da87c67e66b17391bc87a49154290eb1c",
+  "mini/layouts/_default/baseof.html": "271475041b2fda570ebc937c028e4fafe2acb4775483e600bd748b304d1b643a",
+  "mini/layouts/partials/social.html": "824fb8382578961c910083fe271428901c6a5bbe857d1d4c36b589d517e40f85",
+  "mini/layouts/partials/comment.html": "ba4f2dbd6eefd8d3ad309d16e34b05a22f32a2c71a3bdb384d98758b20903cd4",
+  "mini/layouts/partials/head.html": "05a2ab2c187f49d1adb9b9c13d5fd5a78486b661988444f84d88948a90a92b0f",
+  "mini/layouts/partials/footer.html": "75b1385faf87051fc07ccd4afda234904c8a11d1816c96354b69da2e7f17f2a1",
+  "jane/layouts/rss.xml": "cb3bd8adc04f64ee0dfdd88f9c35b61208c7f64d4a0efb197eb5e252cae29771",
+  "jane/layouts/_default/single.html": "df99df07b180138d4c175bcf30d2c0930d5f01eeb345423ecea107613041ae02",
+  "jane/layouts/_default/terms.html": "e31f22742b8dce872402f79dd0385a4c754679b389dfe2ba946c41014bd75f47",
+  "jane/layouts/_default/taxonomy.html": "5a7f123760a9d72aaae4881a3625ee247731cedd368e9d3bc9641384315fb0cf",
+  "jane/layouts/_default/baseof.html": "cfa739af198cba67973599bcbc33444c5306515b857d142da19d5f915fe64e23",
+  "jane/layouts/partials/comments/disqus.html": "05317c6b84fb7e5177feb167a5d25dec65711145b2d9b9f154011081c6dbb64d",
+  "jane/layouts/partials/post/meta.html": "7f6ec17a6a1b19d54d26d9f288768f7e87a22907a62b22cfd6ee5faea6b52109",
+  "jane/layouts/partials/post/copyright.html": "5169a6ea0c5864de38810782e0c0db2eb98d34e742b2f20db9f59c7460221056",
+  "jane/layouts/partials/scripts.html": "d22ea1da9e681a8975aa77adef2fd1bb49dadbbfed2ed6f5e866c2e080c4a2f5",
+  "jane/layouts/partials/head.html": "cda076e243def3d495d583e9871fec7719172cb0f596d7793914f4fd58e47616",
+  "jane/layouts/partials/comments.html": "6d6c136f130d3366a80c7acebc54e0c92a4616402a0f542e23c0d61ce490cc8c",
+  "jane/layouts/partials/footer.html": "96c460183eb84c965068a86fe169a0dfb0950b06e8290958f7e237e867785820",
+  "jane/layouts/partials/author_info.html": "270a3a241d4bc7c10c69315902bafb010e16443934f1d8275d245d0283ba7ec1"
+}

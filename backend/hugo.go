@@ -3,29 +3,23 @@ package backend
 import (
 	"bufio"
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path"
 	"strconv"
 	"strings"
-	"sync/atomic"
+	"sync"
 	"time"
 
 	"github.com/rangwea/swallows/backend/util"
 
-	"github.com/gohugoio/hugo/config"
-	"github.com/gohugoio/hugo/config/allconfig"
-	"github.com/gohugoio/hugo/create/skeletons"
-	"github.com/gohugoio/hugo/deps"
-	"github.com/gohugoio/hugo/hugofs"
-	"github.com/gohugoio/hugo/hugolib"
-	"github.com/gohugoio/hugo/livereload"
-	"github.com/pkg/errors"
 	"golang.org/x/exp/slog"
 
 	"github.com/BurntSushi/toml"
-	cp "github.com/otiai10/copy"
 )
 
 const AboutAid string = "about"
@@ -34,7 +28,6 @@ type _hugo struct {
 	PublicDir     string
 	SitePath      string
 	ImageDir      string
-	hugo          string
 	articleDir    string
 	articleImgDir string
 	themeDir      string
@@ -43,7 +36,12 @@ type _hugo struct {
 	cnameFile     string
 	configFile    string
 	server        *http.Server
-	serverRunning atomic.Bool
+	serverRunning bool
+	previewAddr   string
+	buildMu       sync.Mutex
+	configMu      sync.RWMutex
+	previewMu     sync.Mutex
+	outputMu      sync.RWMutex
 }
 
 var Hugo = _hugo{}
@@ -75,8 +73,22 @@ type ConfigAuthor struct {
 
 func (h *_hugo) Initialize() {
 	slog.Info("init hugo start")
-	h.hugo = path.Join(AppHome, "hugo")
-	h.SitePath = path.Join(AppHome, "site")
+	h.setPaths(path.Join(AppHome, "site"))
+
+	h.NewSite()
+
+	if err := h.migrateBundledThemes(); err != nil {
+		panic(err)
+	}
+	if err := h.repairSite(); err != nil {
+		panic(err)
+	}
+
+	slog.Info("init hugo done")
+}
+
+func (h *_hugo) setPaths(sitePath string) {
+	h.SitePath = sitePath
 	h.articleDir = path.Join(h.SitePath, "content", "post")
 	h.articleImgDir = path.Join(h.articleDir, "images")
 	h.ImageDir = path.Join(h.SitePath, "static", "images")
@@ -87,15 +99,6 @@ func (h *_hugo) Initialize() {
 	h.configFile = path.Join(h.SitePath, "hugo.toml")
 	h.PublicDir = path.Join(h.SitePath, "public")
 
-	h.NewSite()
-
-	h.server = &http.Server{Addr: ":1313"}
-	http.Handle("/", http.FileServer(http.Dir(path.Join(h.SitePath, "public"))))
-	livereload.Initialize()
-	http.HandleFunc("/livereload.js", livereload.ServeJS)
-	http.HandleFunc("/livereload", livereload.Handler)
-
-	slog.Info("init hugo done")
 }
 
 func (h *_hugo) NewSite() {
@@ -106,7 +109,7 @@ func (h *_hugo) NewSite() {
 	}
 
 	// call hugo to create site
-	err := skeletons.CreateSite(h.SitePath, hugofs.Os, false, "toml")
+	err := createSiteSkeleton(h.SitePath)
 	if err != nil {
 		panic(fmt.Errorf("copy config fail, %w", err))
 	}
@@ -125,7 +128,7 @@ func (h *_hugo) NewSite() {
 	}
 
 	// copy theme zip file
-	themeCopyDstPath := path.Join(AppHome, "themes.zip")
+	themeCopyDstPath := path.Join(path.Dir(h.SitePath), "themes.zip")
 	err = util.CopyAsset("themes.zip", themeCopyDstPath)
 	if err != nil {
 		panic(fmt.Errorf("copy themes.zip fail, %w", err))
@@ -142,73 +145,77 @@ func (h *_hugo) NewSite() {
 	os.Mkdir(h.articleDir, os.ModePerm)
 	os.Mkdir(h.articleImgDir, os.ModePerm)
 	os.Mkdir(h.ImageDir, os.ModePerm)
-	os.Create(h.cnameFile)
+	os.WriteFile(h.cnameFile, nil, 0644)
 	// create about post
 	os.Mkdir(h.aboutDir, os.ModePerm)
-	os.Create(h.aboutFile)
+	os.WriteFile(h.aboutFile, nil, 0644)
 
 	slog.Info("new site success")
 }
 
-func (h *_hugo) Build() (err error) {
-	configs, err := allconfig.LoadConfig(allconfig.ConfigSourceDescriptor{
-		Fs: hugofs.Os, Filename: path.Join(h.SitePath, "hugo.toml"),
-	})
-	if err != nil {
-		slog.Error("load hugo build config fail", err)
-		return
-	}
-
-	fs := hugofs.NewFrom(hugofs.Os, config.BaseConfig{WorkingDir: h.SitePath, PublishDir: "public"})
-	s, err := hugolib.NewHugoSites(deps.DepsCfg{Configs: configs, Fs: fs})
-	if err != nil {
-		slog.Error("new hugo sites fail", err)
-		return
-	}
-
-	// copy static
-	t, err := h.getCurrentTheme()
-	if err != nil {
-		return errors.Wrap(err, "get current theme fail")
-	}
-	err = cp.Copy(path.Join(h.themeDir, t, "static"), h.PublicDir)
-	if err != nil {
-		return errors.Wrap(err, "copy theme static file fail")
-	}
-
-	// build
-	err = s.Build(hugolib.BuildCfg{ErrRecovery: true})
-	if err != nil {
-		slog.Error("hugo site build fail", err)
-		return
-	}
-	return
+func (h *_hugo) Build() error {
+	h.buildMu.Lock()
+	defer h.buildMu.Unlock()
+	h.configMu.RLock()
+	defer h.configMu.RUnlock()
+	return h.buildSite()
 }
 
 func (h *_hugo) Preview() error {
-	err := h.Build()
-	if err != nil {
+	if err := h.Build(); err != nil {
 		return err
 	}
-	if h.serverRunning.Swap(true) {
+	h.previewMu.Lock()
+	defer h.previewMu.Unlock()
+	if h.serverRunning {
 		return nil
 	}
+	addr := h.previewAddr
+	if addr == "" {
+		addr = "127.0.0.1:1313"
+	}
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("start preview on %s: %w", addr, err)
+	}
+	mux := http.NewServeMux()
+	files := http.FileServer(http.Dir(h.PublicDir))
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		h.outputMu.RLock()
+		defer h.outputMu.RUnlock()
+		w.Header().Set("Cache-Control", "no-store")
+		files.ServeHTTP(w, r)
+	})
+	server := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	h.server, h.serverRunning = server, true
 	go func() {
-		err := h.server.ListenAndServe()
-		if !errors.Is(err, http.ErrServerClosed) {
-			slog.Error("preview server fail", err)
+		err := server.Serve(listener)
+		h.previewMu.Lock()
+		if h.server == server {
+			h.serverRunning = false
 		}
-		slog.Info("preview running")
+		h.previewMu.Unlock()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("preview server failed", "error", err)
+		}
 	}()
 	return nil
 }
 
 func (h *_hugo) ClosePreview() error {
-	if h.serverRunning.Swap(false) {
-		slog.Info("close preview server")
-		return h.server.Close()
+	h.previewMu.Lock()
+	defer h.previewMu.Unlock()
+	if h.server == nil {
+		return nil
 	}
-	return nil
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err := h.server.Shutdown(ctx)
+	if err != nil {
+		_ = h.server.Close()
+	}
+	h.server, h.serverRunning = nil, false
+	return err
 }
 
 func (h *_hugo) WriteArticle(aid string, meta Meta, content string) error {
@@ -289,6 +296,8 @@ func (h *_hugo) GenArticleImagePath(aid string) (localPath string, sitePath stri
 }
 
 func (h *_hugo) ReadConfig() (c Config, err error) {
+	h.configMu.RLock()
+	defer h.configMu.RUnlock()
 	b, err := os.ReadFile(h.configFile)
 	if err != nil {
 		slog.Error("read config fail", err)
@@ -304,6 +313,15 @@ func (h *_hugo) ReadConfig() (c Config, err error) {
 }
 
 func (h *_hugo) WriteConfig(c Config) error {
+	h.configMu.Lock()
+	defer h.configMu.Unlock()
+	c.Theme = strings.TrimSpace(c.Theme)
+	if c.Theme == "" {
+		c.Theme = "mini"
+	}
+	if err := h.validateTheme(c.Theme); err != nil {
+		return err
+	}
 	b, err := os.ReadFile(h.configFile)
 	if err != nil {
 		return err
@@ -320,9 +338,17 @@ func (h *_hugo) WriteConfig(c Config) error {
 	old["defaultContentLanguage"] = c.DefaultContentLanguage
 	old["theme"] = c.Theme
 	old["copyright"] = c.Copyright
-	oldParams := old["params"].(map[string]interface{})
-	oldAuthor := oldParams["author"].(map[string]interface{})
-	oldAuthor["name"] = c.Params.Author.Name
+	oldParams, _ := old["params"].(map[string]interface{})
+	if oldParams == nil {
+		oldParams = make(map[string]interface{})
+	}
+	oldAuthor, _ := oldParams["author"].(map[string]interface{})
+	if oldAuthor == nil {
+		oldAuthor = make(map[string]interface{})
+	}
+	if c.Params != nil && c.Params.Author != nil {
+		oldAuthor["name"] = c.Params.Author.Name
+	}
 	oldParams["author"] = oldAuthor
 	old["params"] = oldParams
 
@@ -333,7 +359,7 @@ func (h *_hugo) WriteConfig(c Config) error {
 		return err
 	}
 
-	err = os.WriteFile(h.configFile, buf.Bytes(), os.ModePerm)
+	err = writeSiteConfig(h.configFile, buf.Bytes())
 	if err != nil {
 		slog.Error("write config fail", err)
 		return err
@@ -343,6 +369,8 @@ func (h *_hugo) WriteConfig(c Config) error {
 }
 
 func (h *_hugo) ReadConfigStr() (c []byte, err error) {
+	h.configMu.RLock()
+	defer h.configMu.RUnlock()
 	c, err = os.ReadFile(h.configFile)
 	if err != nil {
 		slog.Error("read config fail", err)
@@ -351,13 +379,21 @@ func (h *_hugo) ReadConfigStr() (c []byte, err error) {
 	return
 }
 
-func (h *_hugo) WriteConfigStr(c []byte) (err error) {
-	err = os.WriteFile(h.configFile, c, os.ModePerm)
+func (h *_hugo) WriteConfigStr(c []byte) error {
+	h.configMu.Lock()
+	defer h.configMu.Unlock()
+	values, err := decodeSiteConfig(c)
 	if err != nil {
-		slog.Error("write config fail", err)
-		return
+		return err
 	}
-	return
+	theme, ok := values["theme"].(string)
+	if !ok || strings.TrimSpace(theme) == "" {
+		return fmt.Errorf("theme must name an installed theme")
+	}
+	if err := h.validateTheme(theme); err != nil {
+		return err
+	}
+	return writeSiteConfig(h.configFile, c)
 }
 
 func (h *_hugo) SplitMetaAndContent(article string) (meta string, content string) {
@@ -396,6 +432,9 @@ func (h *_hugo) GetThemes() (themes []string, err error) {
 		return
 	}
 	for _, e := range es {
+		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") {
+			continue
+		}
 		themes = append(themes, e.Name())
 	}
 	return
@@ -422,7 +461,7 @@ func (h *_hugo) setWorkingDirConfig() error {
 		slog.Error("encode config fail", err)
 		return err
 	}
-	err = os.WriteFile(h.configFile, buf.Bytes(), os.ModePerm)
+	err = writeSiteConfig(h.configFile, buf.Bytes())
 	if err != nil {
 		slog.Error("write config fail", err)
 		return err

@@ -72,7 +72,7 @@ If you also love programming, you are welcome to contribute code.
 ```
 git clone git@github.com:rangwea/swallow-wails.git
 cd swallow-wails
-wails dev
+wails dev -tags extended
 ```
 
 ## Story
@@ -86,3 +86,5 @@ There have been many explorations in the early stages of the project, resulting 
 - [swallos-wails](https://github.com/rangwea/swallow-wails)： Base on [wails](https://wails.io/) framework using Go.
 - [swallow-pywebview](https://github.com/rangwea/swallow-pywebview)： Base on [pywebview](https://pywebview.flowrl.com/) using Python，the frontend base on [alpinejs](https://alpinejs.dev/) and [tailwindcss](https://tailwindcss.com/)。
 - [swallow-pyside](https://github.com/rangwea/swallow-pyside)： Base on [Pyside](https://doc.qt.io/qtforpython-6/).
+
+Hugo integration requires Go 1.27+ and CGO for the bundled Jane theme. Build with `wails build -tags extended`; the project config also enables the `extended` build tag.

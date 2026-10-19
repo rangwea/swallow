@@ -1,3 +1,5 @@
+import useSettingsSave from "./lib/use-settings-save";
+import SettingsSaveBar from "./save-bar";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -28,7 +30,6 @@ import {
 } from "/wailsjs/go/backend/App";
 import {
   ifSuccess,
-  checkResult,
   isSuccess,
   checkError,
 } from "@/components/page/util";
@@ -37,6 +38,7 @@ import { t } from "@/lib/i18n";
 
 function SiteSetting() {
   const form = useForm();
+  const saving = useSettingsSave(form, "site", SiteConfigSave);
   const [themeOptions, setThemeOptions] = useState([]);
   const [avatar, setAvatar] = useState("");
   const [favicon, setFavicon] = useState("");
@@ -54,9 +56,7 @@ function SiteSetting() {
     SiteConfigGet().then((result) => {
       if (isSuccess(result)) {
         const data = result.data;
-        for (var k in data) {
-          form.setValue(k, data[k]);
-        }
+        saving.load({ ...data, theme: data.theme || "mini" });
       }
     });
   }
@@ -79,9 +79,7 @@ function SiteSetting() {
     getSiteImage();
   };
 
-  function onSubmit(values) {
-    SiteConfigSave(values).then((r) => checkResult(r, "save success"));
-  }
+
 
   const SiteImageInput = (props) => {
     const { label, type } = props;
@@ -128,7 +126,7 @@ function SiteSetting() {
       </div>
       <Separator />
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(saving.submit)} className="space-y-6">
           <FormField
             control={form.control}
             name="title"
@@ -165,8 +163,7 @@ function SiteSetting() {
                 <FormLabel>{t("siteTheme")}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value ? field.value : "mini"}
-                  defaultValue={field.value ? field.value : "mini"}
+                  value={field.value || "mini"}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -250,7 +247,7 @@ function SiteSetting() {
           ></FormField>
           <SiteImageInput label="Avatar" type="avatar.png" />
           <SiteImageInput label="Favicon" type="favicon.ico" />
-          <Button type="submit" variant="secondary">{t("save")}</Button>
+          <SettingsSaveBar {...saving} onSave={saving.save} />
         </form>
       </Form>
     </div>

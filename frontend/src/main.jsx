@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useSyncExternalStore } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { createHashRouter, RouterProvider } from "react-router-dom";
@@ -7,10 +7,11 @@ import SettingsPage from "@/components/page/settings/page.jsx"
 import EditorPage from '@/components/page/editor/page.jsx'
 import Example from "@/components/page/test.jsx"
 import { initializeTheme } from '@/lib/themes'
-import { initializeLanguage } from '@/lib/i18n'
+import { initializeLanguage, subscribeLanguage, getCurrentLanguage } from '@/lib/i18n'
 import { ConfGet } from "/wailsjs/go/backend/App"
 import { applyEditorFonts, loadGoogleFonts, getRequiredFonts } from '@/lib/fonts'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { Toaster } from '@/components/ui/sonner'
 
 // Global error handler for uncaught errors
 window.onerror = function(message, source, lineno, colno, error) {
@@ -67,10 +68,15 @@ const router = createHashRouter([
   },
 ]);
 
+function LocalizedApp() {
+  const language = useSyncExternalStore(subscribeLanguage, getCurrentLanguage);
+  return <><RouterProvider key={language} router={router} /><Toaster position="top-center" /></>;
+}
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <RouterProvider router={router}></RouterProvider>
+      <LocalizedApp />
     </ErrorBoundary>
   </React.StrictMode>
 );

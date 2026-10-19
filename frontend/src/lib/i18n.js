@@ -42,6 +42,12 @@ export const translations = {
     fontSizeDesc: "文章内容的字体大小（像素）",
     saveChanges: "保存更改",
     settingsSaved: "设置保存成功",
+    settingsSaving: "保存中…",
+    settingsUnsaved: "有未保存的更改",
+    settingsSavedInline: "已保存",
+    settingsRetry: "重试",
+    settingsLoadFailed: "无法读取设置，请重试",
+    settingsInvalidPageSize: "每页文章数需为 1–100 的整数",
     settingsFailed: "保存设置失败",
 
     // Home Page
@@ -244,6 +250,12 @@ export const translations = {
     fontSizeDesc: "文章內容的字體大小（像素）",
     saveChanges: "儲存變更",
     settingsSaved: "設定儲存成功",
+    settingsSaving: "儲存中…",
+    settingsUnsaved: "有未儲存的變更",
+    settingsSavedInline: "已儲存",
+    settingsRetry: "重試",
+    settingsLoadFailed: "無法讀取設定，請重試",
+    settingsInvalidPageSize: "每頁文章數必須為 1–100 的整數",
     settingsFailed: "儲存設定失敗",
 
     // Home Page
@@ -446,6 +458,12 @@ export const translations = {
     fontSizeDesc: "Font size for article content (pixels)",
     saveChanges: "Save Changes",
     settingsSaved: "Settings saved successfully",
+    settingsSaving: "Saving…",
+    settingsUnsaved: "Unsaved changes",
+    settingsSavedInline: "Saved",
+    settingsRetry: "Retry",
+    settingsLoadFailed: "Could not load settings. Please retry.",
+    settingsInvalidPageSize: "Articles per page must be an integer from 1 to 100",
     settingsFailed: "Failed to save settings",
 
     // Home Page
@@ -648,6 +666,12 @@ export const translations = {
     fontSizeDesc: "記事内容のフォントサイズ（ピクセル）",
     saveChanges: "変更を保存",
     settingsSaved: "設定が正常に保存されました",
+    settingsSaving: "保存中…",
+    settingsUnsaved: "未保存の変更があります",
+    settingsSavedInline: "保存しました",
+    settingsRetry: "再試行",
+    settingsLoadFailed: "設定を読み込めません。再試行してください。",
+    settingsInvalidPageSize: "1ページの記事数は 1〜100 の整数で指定してください",
     settingsFailed: "設定の保存に失敗しました",
 
     // Home Page
@@ -811,15 +835,22 @@ export const translations = {
 
 // 当前语言
 let currentLanguage = "zh-CN";
+const languageListeners = new Set();
+export function subscribeLanguage(listener) {
+  languageListeners.add(listener);
+  return () => languageListeners.delete(listener);
+}
 
 // 设置语言
 export function setLanguage(lang) {
   if (translations[lang]) {
+    const changed = currentLanguage !== lang;
     currentLanguage = lang;
     // 保存到 localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("app-language", lang);
     }
+    if (changed) languageListeners.forEach((listener) => listener());
   }
 }
 
@@ -841,7 +872,7 @@ export async function initializeLanguage() {
     if (typeof window !== "undefined") {
       const savedLang = localStorage.getItem("app-language");
       if (savedLang && translations[savedLang]) {
-        currentLanguage = savedLang;
+        setLanguage(savedLang);
         return;
       }
     }

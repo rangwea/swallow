@@ -1,5 +1,5 @@
 baseURL = "http://localhost:1313/"
-languageCode = "zh-cn"
+locale = "zh-cn"
 defaultContentLanguage = "zh"
 title = "swallow"
 description = "this is my first blogs"

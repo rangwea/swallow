@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
   ChevronsLeft,
@@ -132,7 +131,6 @@ function Home() {
   
   return (
     <>
-      <Toaster position="top-center" />
       <div className="home-shell flex flex-col h-screen overflow-hidden">
         <header className="home-fixed-header" style={{ "--wails-draggable": "drag" }} onDoubleClick={toggleFromWindowHeader}>
           <div className="home-header-spacer" aria-hidden="true" />

@@ -93,7 +93,7 @@ func initAppHome() {
 	AppHome = path.Join(u.HomeDir, ".swallow")
 	if e, _ := util.PathExists(AppHome); !e {
 		if err = os.Mkdir(AppHome, os.ModePerm); err != nil {
-			panic(fmt.Errorf("make app home dir fail", err))
+			panic(fmt.Errorf("make app home dir fail: %w", err))
 		}
 	}
 }
@@ -115,15 +115,15 @@ type R struct {
 }
 
 type AppConf struct {
-	ActivedDeploy      ConfType `json:"activedDeploy"`
-	AppTheme           string   `json:"appTheme"`           // App 主题色
-	ArticlesPerPage    int      `json:"articlesPerPage"`    // 每页文章数量
-	ShowArticlesStats  bool     `json:"showArticlesStats"`  // 是否显示文章统计
-	Language           string   `json:"language"`           // 界面语言
-	EditorTitleFont    string   `json:"editorTitleFont"`    // 编辑器标题字体
-	EditorContentFont  string   `json:"editorContentFont"`  // 编辑器内容字体
-	EditorLineHeight   float64  `json:"editorLineHeight"`   // 编辑器行距
-	EditorFontSize     int      `json:"editorFontSize"`     // 编辑器字体大小
+	ActivedDeploy     ConfType `json:"activedDeploy"`
+	AppTheme          string   `json:"appTheme"`          // App 主题色
+	ArticlesPerPage   int      `json:"articlesPerPage"`   // 每页文章数量
+	ShowArticlesStats bool     `json:"showArticlesStats"` // 是否显示文章统计
+	Language          string   `json:"language"`          // 界面语言
+	EditorTitleFont   string   `json:"editorTitleFont"`   // 编辑器标题字体
+	EditorContentFont string   `json:"editorContentFont"` // 编辑器内容字体
+	EditorLineHeight  float64  `json:"editorLineHeight"`  // 编辑器行距
+	EditorFontSize    int      `json:"editorFontSize"`    // 编辑器字体大小
 }
 
 const confTypeApp ConfType = "app"

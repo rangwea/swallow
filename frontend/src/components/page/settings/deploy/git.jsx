@@ -1,5 +1,6 @@
+import useSettingsSave from "../lib/use-settings-save";
+import SettingsSaveBar from "../save-bar";
 import React, { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import {
@@ -13,13 +14,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ConfSave, ConfGet } from "/wailsjs/go/backend/App";
-import { checkResult, isSuccess } from "@/components/page/util";
+import { isSuccess } from "@/components/page/util";
 import { t } from "@/lib/i18n";
 
 function GitSetting() {
   const form = useForm();
 
   const confType = "github";
+  const saving = useSettingsSave(form, "deploy-github", (values) => ConfSave(confType, JSON.stringify(values)));
 
   useEffect(() => {
     init();
@@ -30,15 +32,9 @@ function GitSetting() {
     ConfGet(confType).then((result) => {
       if (isSuccess(result)) {
         const data = result.data;
-        for (var k in data) {
-          form.setValue(k, data[k]);
-        }
+        saving.load(data);
       }
     });
-  }
-
-  function onSubmit(values) {
-    ConfSave(confType, JSON.stringify(values)).then(r => checkResult(r, "save config success"));
   }
 
   return (
@@ -51,7 +47,7 @@ function GitSetting() {
       </div>
       <Separator />
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(saving.submit)} className="space-y-6">
           <FormField
             control={form.control}
             name="repository"
@@ -122,7 +118,7 @@ function GitSetting() {
               </FormItem>
             )}
           ></FormField>
-          <Button type="submit" variant="secondary">{t("saveChanges")}</Button>
+          <SettingsSaveBar {...saving} onSave={saving.save} />
         </form>
       </Form>
     </div>

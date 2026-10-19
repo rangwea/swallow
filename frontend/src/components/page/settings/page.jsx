@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import SiteSetting from "@/components/page/settings/site";
 import AppearanceSetting from "@/components/page/settings/appearance";
 import DeploySetting from "@/components/page/settings/deploy/layout";
-import { Toaster } from "@/components/ui/sonner";
 import { t } from "@/lib/i18n";
 import PageShell from "@/components/layout/page-shell";
 import ToolButton from "@/components/layout/tool-button";
@@ -21,7 +20,6 @@ function SettingsPage() {
         onClick={() => setCurrent(name)}>{t(name)}</Button>)}
     </div>
   </>}>
-    <Toaster position="top-center" />
     <div className="settings-content flex-1 min-h-0 overflow-auto px-8 py-6">
       <div className="mx-auto w-full max-w-3xl pb-8">
         <Panel key={current} />

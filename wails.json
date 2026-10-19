@@ -7,9 +7,9 @@
     "frontend:dev:watcher": "npm run dev",
     "frontend:dev:serverUrl": "auto",
     "author": {
-      "name": "Andy",
-      "email": "wikia.woo@gmail.com"
+        "name": "Andy",
+        "email": "wikia.woo@gmail.com"
     },
-    "assetdir": "assets"
-  }
-  
+    "assetdir": "assets",
+    "build:tags": "extended"
+}

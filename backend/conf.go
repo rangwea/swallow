@@ -22,7 +22,7 @@ func (conf *_conf) Initialize() {
 	// init
 	err := os.Mkdir(conf.DIR, os.ModePerm)
 	if err != nil && !os.IsExist(err) {
-		panic(fmt.Errorf("mk config dir fail", err))
+		panic(fmt.Errorf("mk config dir fail: %w", err))
 		return
 	}
 }

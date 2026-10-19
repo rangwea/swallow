@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,34 +11,33 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ConfGet, ConfSave, OpenLogDir, GetLogDir } from "/wailsjs/go/backend/App";
+import { OpenLogDir, GetLogDir } from "/wailsjs/go/backend/App";
 import { isSuccess } from "@/components/page/util";
-import { APP_THEMES, applyTheme } from "@/lib/themes";
-import { t, LANGUAGES, setLanguage, getCurrentLanguage } from "@/lib/i18n";
+import { APP_THEMES } from "@/lib/themes";
+import { t, LANGUAGES } from "@/lib/i18n";
 import {
   FONT_OPTIONS,
   LINE_HEIGHT_OPTIONS,
   FONT_SIZE_OPTIONS,
-  applyEditorFonts,
-  loadGoogleFonts,
-  getRequiredFonts,
 } from "@/lib/fonts";
-import { FolderOpen, FileText } from "lucide-react";
+import { FolderOpen } from "lucide-react";
+import useAppearanceAutosave from "./lib/use-appearance-autosave";
+import SettingsSaveBar from "./save-bar";
 
 function AppearanceSetting() {
-  const savedTheme = useRef(localStorage.getItem("app-theme") || "sepia");
-  const [appTheme, setAppTheme] = useState(savedTheme.current);
-  const [articlesPerPage, setArticlesPerPage] = useState(10);
-  const [showArticlesStats, setShowArticlesStats] = useState(true);
-  const [language, setLanguageState] = useState("zh-CN");
-  const [editorTitleFont, setEditorTitleFont] = useState("playfair-display");
-  const [editorContentFont, setEditorContentFont] = useState("instrument-sans");
-  const [editorLineHeight, setEditorLineHeight] = useState(1.75);
-  const [editorFontSize, setEditorFontSize] = useState(16);
+  const autosave = useAppearanceAutosave();
+  const { appTheme, articlesPerPage, showArticlesStats, language, editorTitleFont, editorContentFont, editorLineHeight, editorFontSize } = autosave.values;
+  const setAppTheme = (value) => autosave.update({ appTheme: value });
+  const setArticlesPerPage = (value) => autosave.update({ articlesPerPage: value });
+  const setShowArticlesStats = (value) => autosave.update({ showArticlesStats: value });
+  const setLanguageState = (value) => autosave.update({ language: value });
+  const setEditorTitleFont = (value) => autosave.update({ editorTitleFont: value });
+  const setEditorContentFont = (value) => autosave.update({ editorContentFont: value });
+  const setEditorLineHeight = (value) => autosave.update({ editorLineHeight: value });
+  const setEditorFontSize = (value) => autosave.update({ editorFontSize: value });
   const [logDir, setLogDir] = useState("");
 
   useEffect(() => {
-    init();
     // 获取日志目录路径
     GetLogDir().then((result) => {
       if (isSuccess(result)) {
@@ -47,93 +46,12 @@ function AppearanceSetting() {
     });
   }, []);
 
-  useEffect(() => () => applyTheme(savedTheme.current), []);
-
   function handleOpenLogDir() {
     OpenLogDir().then((result) => {
-      if (!isSuccess(result)) {
-        toast.error(result.msg || t("openLogDirFailed"));
-      }
+      if (result.code !== 1) toast.error(result.msg || t("openLogDirFailed"));
     }).catch((err) => {
       toast.error(t("openLogDirFailed"));
       console.error("Error opening log directory:", err);
-    });
-  }
-
-  function init() {
-    ConfGet("app").then((result) => {
-      if (isSuccess(result)) {
-        const data = result.data;
-        if (data) {
-          savedTheme.current = data.appTheme || "sepia";
-          setAppTheme(savedTheme.current);
-          setArticlesPerPage(data.articlesPerPage || 10);
-          setShowArticlesStats(
-            data.showArticlesStats !== undefined ? data.showArticlesStats : true
-          );
-          setLanguageState(data.language || "zh-CN");
-          setEditorTitleFont(data.editorTitleFont || "playfair-display");
-          setEditorContentFont(data.editorContentFont || "instrument-sans");
-          setEditorLineHeight(data.editorLineHeight || 1.75);
-          setEditorFontSize(data.editorFontSize || 16);
-        }
-      }
-    });
-  }
-
-  function save() {
-    // Get existing config first
-    ConfGet("app").then((existingResult) => {
-      if (!isSuccess(existingResult)) return;
-      const existingData = existingResult.data || {};
-
-      // Merge with new values
-      const conf = {
-        ...existingData,
-        appTheme,
-        articlesPerPage: parseInt(articlesPerPage),
-        showArticlesStats,
-        language,
-        editorTitleFont,
-        editorContentFont,
-        editorLineHeight: parseFloat(editorLineHeight),
-        editorFontSize: parseInt(editorFontSize),
-      };
-
-      console.log("Saving config:", conf);
-
-      ConfSave("app", JSON.stringify(conf)).then((result) => {
-        if (isSuccess(result)) {
-          console.log("Config saved successfully");
-          toast.success(t("settingsSaved"));
-
-          // Apply theme immediately
-          applyTheme(appTheme);
-          const languageChanged = language !== getCurrentLanguage();
-          setLanguage(language);
-          savedTheme.current = appTheme;
-          applyEditorFonts({
-            titleFont: editorTitleFont,
-            contentFont: editorContentFont,
-            lineHeight: editorLineHeight,
-            fontSize: editorFontSize,
-          });
-
-          // Load required fonts
-          const fonts = getRequiredFonts(editorTitleFont, editorContentFont);
-          loadGoogleFonts(fonts);
-
-          // Save to localStorage to prevent reset on reload
-          if (typeof window !== "undefined") {
-            localStorage.setItem("app-theme", appTheme);
-          }
-
-          // Reload page to apply language changes
-          if (languageChanged) setTimeout(() => window.location.reload(), 800);
-        } else {
-          toast.error(result.msg || t("settingsFailed"));
-        }
-      });
     });
   }
 
@@ -146,6 +64,7 @@ function AppearanceSetting() {
         <p className="text-sm text-muted-foreground">{t("appearanceDesc")}</p>
       </div>
 
+      <fieldset disabled={!autosave.ready} className="space-y-8 min-w-0">
       <Separator />
 
       {/* Language Selection */}
@@ -159,10 +78,10 @@ function AppearanceSetting() {
 
         <div className="grid grid-cols-2 gap-3">
           {LANGUAGES.map((lang) => (
-            <div
+            <button type="button" aria-label={lang.nativeName} aria-pressed={language === lang.code}
               key={lang.code}
               onClick={() => setLanguageState(lang.code)}
-              className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
+              className={`text-left flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
                 language === lang.code
                   ? "border-accent bg-accent/5 shadow-sm"
                   : "border-border/40 hover:border-accent/50 hover:bg-accent/5"
@@ -187,7 +106,7 @@ function AppearanceSetting() {
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               )}
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -207,7 +126,7 @@ function AppearanceSetting() {
           {APP_THEMES.map((theme) => (
             <button type="button" aria-label={t(theme.nameKey)} aria-pressed={appTheme === theme.id}
               key={theme.id}
-              onClick={() => { setAppTheme(theme.id); applyTheme(theme.id); }}
+              onClick={() => setAppTheme(theme.id)}
               className={`relative text-left flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
                 appTheme === theme.id
                   ? "border-accent bg-accent/5 shadow-sm"
@@ -478,12 +397,8 @@ function AppearanceSetting() {
 
       <Separator />
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={save} variant="secondary" className="px-6">
-          {t("saveChanges")}
-        </Button>
-      </div>
+      </fieldset>
+      <SettingsSaveBar {...autosave} onSave={autosave.save} automatic />
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 
 function AppSetting() {
@@ -12,7 +11,6 @@ function AppSetting() {
   return (
     <>
       <div>
-      <Toaster/>
       <Button onClick={click}>Submit</Button>
       </div>
     </>
