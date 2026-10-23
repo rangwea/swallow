@@ -2,6 +2,8 @@ import React, { useSyncExternalStore } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { createHashRouter, RouterProvider } from "react-router-dom";
+import Publishing from '@/components/page/publishing';
+import PublishingExit from '@/components/layout/publishing-exit';
 import WritingLibrary from '@/components/page/writing-library';
 import Home from '@/components/page/home.jsx'
 import SettingsPage from "@/components/page/settings/page.jsx"
@@ -51,6 +53,7 @@ ConfGet("app").then((result) => {
 });
 
 const router = createHashRouter([
+ {path:"/publishing",element:<Publishing/>},
  {path:"/writing",element:<WritingLibrary/>},
   {
     path: "/",
@@ -72,7 +75,7 @@ const router = createHashRouter([
 
 function LocalizedApp() {
   const language = useSyncExternalStore(subscribeLanguage, getCurrentLanguage);
-  return <><RouterProvider key={language} router={router} /><Toaster position="top-center" /></>;
+  return <><RouterProvider key={language} router={router} /><Toaster position="top-center" /><PublishingExit/></>;
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(

@@ -41,7 +41,7 @@ func (d *OssDeployer) Deploy(publicDir string, ci interface{}) (err error) {
 		for _, item := range lsRes.Objects {
 			h, err := bucket.GetObjectDetailedMeta(item.Key)
 			if err != nil {
-				return nil
+				return err
 			}
 			remoteFiles[item.Key] = h.Get("x-oss-hash-crc64ecma")
 		}

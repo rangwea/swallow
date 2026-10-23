@@ -21,7 +21,7 @@ type GitDeployer struct {
 }
 
 func (d *GitDeployer) Deploy(publicDir string, c interface{}) (err error) {
-	github := c.(Github)
+	github := c.(*Github)
 
 	_, err = git.PlainInit(publicDir, false)
 	if err != nil {

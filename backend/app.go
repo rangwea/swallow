@@ -84,6 +84,9 @@ func initialize() {
 		panic(fmt.Errorf("recover writing operation: %w", err))
 	}
 
+	if err := initPublishing(); err != nil {
+		panic(fmt.Errorf("init publishing: %w", err))
+	}
 	Log.Info("Application initialized successfully")
 }
 
@@ -102,6 +105,8 @@ func initAppHome() {
 
 func initDB() {
 	DB = sqlx.MustOpen("sqlite3", path.Join(AppHome, "db"))
+	DB.SetMaxOpenConns(1)
+	DB.MustExec("PRAGMA busy_timeout=5000;")
 	DB.MustExec(InitSql)
 }
 
@@ -144,27 +149,7 @@ func (a *App) SitePreview() *R {
 	return success(nil)
 }
 
-func (a *App) SiteDeploy() *R {
-	err := Hugo.Build()
-	if err != nil {
-		return fail(err)
-	}
-
-	ac, err := getAppConf()
-	if err != nil {
-		return fail(errors.Wrap(err, "get app conf fail"))
-	}
-	if ac == nil || ac.ActivedDeploy == "" {
-		return fail(errors.New("please set server config"))
-	}
-
-	err = Deployers.Deploy(ac.ActivedDeploy, Hugo.PublicDir)
-	if err != nil {
-		return fail(errors.Wrap(err, "deploy fail"))
-	}
-
-	return success(nil)
-}
+func (a *App) SiteDeploy() *R { return fail(errors.New("use_publish_center_confirmation")) }
 
 func (a *App) ArticleList(search string, page int) *R {
 	writingMu.Lock()
@@ -336,20 +321,28 @@ func (a *App) ConfGet(t ConfType) *R {
 }
 
 func (a *App) ConfSave(t ConfType, v string) *R {
-	appConf, err := getAppConf()
-	if err != nil {
+	if err := Conf.Write(t, v); err != nil {
 		return fail(err)
 	}
-	appConf.ActivedDeploy = t
-	appConfBytes, err := json.Marshal(appConf)
-	if err != nil {
-		return fail(errors.New("app conf marshal error"))
-	}
-	Conf.Write(confTypeApp, string(appConfBytes))
-
-	err = Conf.Write(t, v)
-	if err != nil {
-		return fail(err)
+	if _, isDeploy := deployers[t]; isDeploy {
+		b, err := Conf.Read(confTypeApp)
+		if err != nil {
+			return fail(err)
+		}
+		values := map[string]interface{}{}
+		if len(b) > 0 {
+			if err = json.Unmarshal(b, &values); err != nil {
+				return fail(err)
+			}
+		}
+		values["activedDeploy"] = t
+		data, err := json.Marshal(values)
+		if err != nil {
+			return fail(err)
+		}
+		if err = Conf.Write(confTypeApp, string(data)); err != nil {
+			return fail(err)
+		}
 	}
 	return success(nil)
 }

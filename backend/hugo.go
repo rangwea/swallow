@@ -25,6 +25,7 @@ import (
 const AboutAid string = "about"
 
 type _hugo struct {
+	frozenBuild   bool
 	PublicDir     string
 	SitePath      string
 	ImageDir      string

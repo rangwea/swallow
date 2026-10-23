@@ -31,8 +31,13 @@ func (h *_hugo) buildSite() (err error) {
 	flags.Set("workingDir", sitePath)
 	flags.Set("publishDir", stage)
 	flags.Set("environment", "production")
+	flags.Set("resourceDir", filepath.Join(sitePath, "resources"))
 	flags.Set("theme", h.effectiveTheme())
-	configs, err := allconfig.LoadConfig(allconfig.ConfigSourceDescriptor{Fs: hugofs.Os, Filename: filepath.Join(sitePath, "hugo.toml"), Flags: flags, Environment: "production"})
+	descriptor := allconfig.ConfigSourceDescriptor{Fs: hugofs.Os, Filename: filepath.Join(sitePath, "hugo.toml"), Flags: flags, Environment: "production"}
+	if h.frozenBuild {
+		descriptor.Environ = []string{}
+	}
+	configs, err := allconfig.LoadConfig(descriptor)
 	if err != nil {
 		return fmt.Errorf("load Hugo config: %w", err)
 	}

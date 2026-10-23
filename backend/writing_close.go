@@ -27,6 +27,9 @@ func (a *App) BeforeClose(ctx context.Context) bool {
 	if closeAllowed.Swap(false) {
 		return false
 	}
+	if publishingBeforeClose(ctx) {
+		return true
+	}
 	writingGuard.Lock()
 	active := writingGuard.active
 	writingGuard.Unlock()
@@ -36,4 +39,10 @@ func (a *App) BeforeClose(ctx context.Context) bool {
 	rt.EventsEmit(ctx, "writing:close")
 	return true
 }
-func (a *App) WritingCloseReady() { closeAllowed.Store(true); rt.Quit(a.ctx) }
+func (a *App) WritingCloseReady() {
+	if publishingBeforeClose(a.ctx) {
+		return
+	}
+	closeAllowed.Store(true)
+	rt.Quit(a.ctx)
+}

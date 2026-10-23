@@ -18,7 +18,7 @@ type NetlifyDeployer struct {
 }
 
 func (d *NetlifyDeployer) Deploy(publicDir string, ci interface{}) (err error) {
-	c := ci.(Netlify)
+	c := ci.(*Netlify)
 
 	client := netlify.Default
 	authInfoWriter := runtime.ClientAuthInfoWriterFunc(func(r runtime.ClientRequest,

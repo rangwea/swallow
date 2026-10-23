@@ -17,8 +17,11 @@ import {
   SiteDeploy,
   ConfGet,
  DraftList,
+ PublishArticleStates,
+ PublishActivity,
 } from "/wailsjs/go/backend/App";
 import { isSuccess, checkError, checkResult } from "@/components/page/util";
+import { pt } from "@/lib/publish-text";
 import { wt } from "@/lib/writing-text";
 import { t } from "@/lib/i18n";
 import { toggleFromWindowHeader } from "@/components/layout/window-header";
@@ -26,7 +29,12 @@ import ToolButton from "@/components/layout/tool-button";
 
 function Home() {
  const [draftCount,setDraftCount]=useState(0);
- useEffect(()=>{DraftList().then(r=>{if(r.code===1)setDraftCount((r.data||[]).length);}).catch(()=>{});},[]);
+ const [articleDrafts,setArticleDrafts]=useState({});
+ useEffect(()=>{DraftList().then(r=>{if(r.code===1){setDraftCount((r.data||[]).length);setArticleDrafts(Object.fromEntries((r.data||[]).filter(d=>d.articleId).map(d=>[d.articleId,true])));}}).catch(()=>{});},[]);
+  const [publishStates,setPublishStates]=useState({known:false,states:{}});
+ const [publishActivity,setPublishActivity]=useState({activeId:'',stage:''});
+ const lastPublishActivity=useRef(null);
+ useEffect(()=>{let cancelled=false;async function poll(){try{const r=await PublishActivity();if(cancelled||r.code!==1||!r.data)return;setPublishActivity(r.data);if(lastPublishActivity.current!==r.data.activeId){lastPublishActivity.current=r.data.activeId;const states=await PublishArticleStates();if(!cancelled&&states.code===1&&states.data)setPublishStates(states.data);}}catch{}}poll();const timer=setInterval(poll,2000);return()=>{cancelled=true;clearInterval(timer);};},[]);
   const [articles, setArticles] = useState([]);
   const [checked, setChecked] = useState([]);
   const [deleteBtnShow, setDeleteBtnShow] = useState(false);
@@ -91,9 +99,7 @@ function Home() {
     SitePreview().then(checkError);
   }
 
-  function deploy() {
-    SiteDeploy().then((r) => checkResult(r, "deploy success"));
-  }
+  function deploy() {navigate("/publishing");}
 
   function removeArticle() {
     if (checked.length > 0) {
@@ -160,7 +166,7 @@ function Home() {
             <Link to="/writing"><ToolButton className="home-action-button" icon="ArchiveRestore" label={`${wt("newDrafts")}${draftCount?` (${draftCount})`:""}`} /></Link>
  <Link to="/editor"><ToolButton className="home-action-button home-action-primary" icon="SquarePlus" label={t("newArticle")} /></Link>
             <ToolButton className="home-action-button" icon="View" label={t("preview")} onClick={preview} />
-            <ToolButton className="home-action-button" icon="Rocket" label={t("deploy")} onClick={deploy} />
+            <ToolButton className={`home-action-button ${publishActivity.activeId?"publish-running":""}`} icon="Rocket" label={publishActivity.activeId?pt(publishActivity.stage):pt("center")} onClick={deploy} />
             <Link to="/settings"><ToolButton className="home-action-button" icon="Settings" label={t("settings")} /></Link>
           </div>
         </header>
@@ -206,6 +212,7 @@ function Home() {
                     {/* Row 1: Title */}
                     <h2 className="article-title" title={item.title}>
                       {item.title}
+                      <span className="publish-status ml-2">{pt(publishStates.known?(publishStates.states[String(item.id)]||"unpublished"):"unknown")}{articleDrafts[String(item.id)]?` · ${pt("localDraft")}`:""}</span>
                     </h2>
 
                     {/* Row 2: Tags + Time */}

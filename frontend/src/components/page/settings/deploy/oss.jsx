@@ -1,3 +1,4 @@
+import PublishFields from "./publish-fields";
 import useSettingsSave from "../lib/use-settings-save";
 import SettingsSaveBar from "../save-bar";
 import React, { useEffect } from "react";
@@ -116,6 +117,7 @@ function OssSetting() {
               </FormItem>
             )}
           ></FormField>
+          <PublishFields form={form} provider="oss" />
           <SettingsSaveBar {...saving} onSave={saving.save} />
         </form>
       </Form>
