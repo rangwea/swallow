@@ -2,6 +2,7 @@ package backend
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/rangwea/swallows/backend/deploy"
 	"reflect"
 )
@@ -33,19 +34,23 @@ type _deployers struct {
 }
 
 func (d *_deployers) Deploy(t ConfType, publicDir string) error {
+	deployer, ok := deployers[t]
+	if !ok {
+		return fmt.Errorf("unknown deployment type: %s", t)
+	}
 	c, err := Conf.Read(t)
 	if err != nil {
 		return err
 	}
 
-	deployer := deployers[t]
+	if len(c) == 0 {
+		return fmt.Errorf("deployment %s is not configured", t)
+	}
 	conf := reflect.New(deployer.ConfType()).Interface()
 	err = json.Unmarshal(c, &conf)
 	if err != nil {
 		return err
 	}
 
-	err = deployer.Deploy(publicDir, conf)
-
-	return nil
+	return deployer.Deploy(publicDir, conf)
 }

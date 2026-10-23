@@ -1,18 +1,19 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Check, MoveLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import MarkdownBody from "./markdown-body";
+import WritingDialog from "./writing-dialog";
+import useWritingDraft from "./use-writing-draft";
+import { wt } from "@/lib/writing-text";
 import InsertTools from "./insert-tools";
 import FloatingToolbar, { readToolbarDock } from "@/components/layout/floating-toolbar";
 import { toast } from "sonner";
 import WindowHeader from "@/components/layout/window-header";
 import ToolBtn from "@/components/layout/tool-button";
 import {
-  ArticleSave,
-  ArticleGet,
   ArticleInsertImage,
   ArticleInsertImageBlob,
 } from "/wailsjs/go/backend/App";
@@ -32,102 +33,22 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { TagInput } from "emblor";
-import { getCurrentTime, isSuccess } from "@/components/page/util";
+import { isSuccess } from "@/components/page/util";
 import { t } from "@/lib/i18n";
 
 function EditorPage() {
   const [params] = useSearchParams();
   const requestedId = params.get("id");
-  const [id, setId] = useState(requestedId);
-
-  const [title, setTitle] = useState("");
-  const bodyRef = useRef(null);
-  const revision = useRef(0);
-  const savingRef = useRef(false);
-  const [saving, setSaving] = useState(false);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [loading, setLoading] = useState(Boolean(id));
-  const [dock, setDock] = useState(readToolbarDock);
-  const [preview, setPreview] = useState("edit");
-  const [changed, setChanged] = useState(false);
-  const markChanged = useCallback(() => {
-    revision.current += 1;
-    setChanged(true);
-  }, []);
-
-  const form = useForm();
-
-  const [tags, setTags] = React.useState([]);
-  const [activeTagIndex, setActiveTagIndex] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setId(requestedId);
-    setLoading(Boolean(requestedId));
-    setLoadFailed(false);
-    setChanged(false);
-    setTitle("");
-    setTags([]);
-    form.reset({ tags: [], date: getCurrentTime(), lastmod: getCurrentTime() });
-    bodyRef.current?.setValue("");
-    if (requestedId) {
-      ArticleGet(requestedId).then((result) => {
-        if (cancelled) return;
-        if (!isSuccess(result)) {
-          setLoadFailed(true);
-          return;
-        }
-        const meta = result.data.meta;
-        const loadedTags = (meta.tags || []).map((text) => ({ id: text, text }));
-        setTitle(meta.title || "");
-        bodyRef.current?.setValue(result.data.content || "");
-        setTags(loadedTags);
-        form.reset({ tags: loadedTags, date: meta.date || "", lastmod: meta.lastmod || "" });
-      }).catch(() => {
-        if (!cancelled) { setLoadFailed(true); toast.error(t("editorLoadFailed")); }
-      }).finally(() => { if (!cancelled) setLoading(false); });
-    }
-    return () => { cancelled = true; };
-  }, [requestedId, form]);
-
-  async function save() {
-    if (savingRef.current || loading || loadFailed) return;
-    savingRef.current = true;
-    setSaving(true);
-    const savedRevision = revision.current;
-    try {
-      const r = await ArticleSave(id || "", getMeta(), bodyRef.current?.getValue() || "");
-      if (isSuccess(r)) {
-        setId(r.data);
-        if (revision.current === savedRevision) setChanged(false);
-      }
-    } catch {
-      toast.error(t("editorSaveFailed"));
-    } finally {
-      savingRef.current = false;
-      setSaving(false);
-    }
-  }
-
-  useEffect(() => {
-    function onKeyDown(event) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
-        event.preventDefault();
-        save();
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  });
-
-  function getMeta() {
-    let meta = { ...form.getValues() };
-    meta["title"] = title;
-    if (meta["tags"]) {
-      meta["tags"] = meta["tags"].map((e) => e.text);
-    }
-    return meta;
-  }
+  const [title,setTitle]=useState("");
+  const bodyRef=useRef(null);
+  const form=useForm();
+  const [tags,setTags]=useState([]);
+  const [activeTagIndex,setActiveTagIndex]=useState(null);
+  const [dock,setDock]=useState(readToolbarDock);
+  const [preview,setPreview]=useState("edit");
+  const writing=useWritingDraft({requestedId,requestedDraft:params.get("draft"),bodyRef,form,title,setTitle,setTags});
+  const {id,loading,loadFailed,saving,changed,markChanged,save}=writing;
+  const locked=loading||loadFailed||!!writing.recovery||writing.leaving||!!writing.leave;
 
   async function insertImage() {
     try {
@@ -158,7 +79,7 @@ function EditorPage() {
     setTitle(e.target.value);
   }
 
-  const statusText = t(loadFailed ? "editorLoadFailed" : loading ? "editorLoading" : saving ? "editorSaving" : changed ? "editorUnsaved" : "editorSaved");
+  const statusText = loadFailed?t("editorLoadFailed"):loading?t("editorLoading"):saving?t("editorSaving"):writing.draftStatus?wt(writing.draftStatus):(changed||!id)?t("editorUnsaved"):wt("formalSaved");
 
   return (
     <Sheet key="right">
@@ -184,15 +105,15 @@ function EditorPage() {
             ))}
           </div>
           <span className="editor-save-status text-xs text-muted-foreground" role="status" title={statusText}>
-            {statusText}
+            {writing.draftStatus==="draftFailed"?<button type="button" aria-label={wt("retry")} onClick={writing.retry}>{statusText}</button>:statusText}
           </span>
-          <InsertTools bodyRef={bodyRef} disabled={loading || loadFailed || preview === "preview"} onInserted={() => setPreview((mode) => mode === "preview" ? "edit" : mode)} />
-          <ToolBtn icon="Image" label={t("editorInsertImage")} onClick={insertImage} disabled={loading || loadFailed} />
-          <SheetTrigger asChild><ToolBtn icon="Settings" label={t("articleMeta")} /></SheetTrigger>
+          <InsertTools bodyRef={bodyRef} disabled={locked || preview === "preview"} onInserted={() => setPreview((mode) => mode === "preview" ? "edit" : mode)} />
+          <ToolBtn icon="Image" label={t("editorInsertImage")} onClick={insertImage} disabled={locked} />
+          <SheetTrigger asChild><ToolBtn icon="Settings" label={t("articleMeta")} disabled={locked} /></SheetTrigger>
           <Button
             aria-label={t("editorSave")}
             title={t("editorSave") + " (⌘/Ctrl+S)"}
-            disabled={saving || loading || loadFailed}
+            disabled={saving || locked}
             variant="ghost"
             size="icon"
             className="w-10 h-10 rounded-full"
@@ -211,13 +132,15 @@ function EditorPage() {
             aria-label={t("titlePlaceholder")}
             placeholder={t("titlePlaceholder")}
             value={title}
-            disabled={loading || loadFailed}
+            disabled={locked}
             onChange={titleChange}
           />
-          <MarkdownBody ref={bodyRef} mode={preview} disabled={loading || loadFailed}
-            onDirty={markChanged} onImage={onImagePasted} />
+          <MarkdownBody ref={bodyRef} mode={preview} disabled={locked}
+            onDirty={markChanged} onImage={onImagePasted} onComposition={writing.onComposition} />
         </div>
 
+        {writing.recovery&&<WritingDialog label={wt("recovery")}><h2>{wt("recovery")}</h2><p>{wt(writing.recovery.conflict?"conflict":"recoveryHint")}</p><div className="flex gap-2 flex-wrap"><Button onClick={()=>writing.decideRecovery("recover")}>{wt("recover")}</Button><Button variant="secondary" onClick={()=>writing.decideRecovery("later")}>{wt("later")}</Button><Button variant="ghost" onClick={()=>{if(window.confirm(wt("discardConfirm")))writing.decideRecovery("discard");}}>{wt("discard")}</Button></div></WritingDialog>}
+        {writing.leave&&<WritingDialog alert label={wt("draftFailed")}><h2>{wt("draftFailed")}</h2><p>{wt("leaveFailed")}</p><div className="flex gap-2 flex-wrap">{["retry","stay","abandon"].map(action=><Button key={action} variant={action==="retry"?"default":"ghost"} onClick={()=>writing.leaveAction(action)}>{wt(action)}</Button>)}</div></WritingDialog>}
         <SheetContent className="backdrop-blur-md bg-card/95">
           <SheetHeader>
             <SheetTitle className="font-serif text-2xl">{t("articleMeta")}</SheetTitle>

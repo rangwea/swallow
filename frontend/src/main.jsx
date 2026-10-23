@@ -2,6 +2,7 @@ import React, { useSyncExternalStore } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { createHashRouter, RouterProvider } from "react-router-dom";
+import WritingLibrary from '@/components/page/writing-library';
 import Home from '@/components/page/home.jsx'
 import SettingsPage from "@/components/page/settings/page.jsx"
 import EditorPage from '@/components/page/editor/page.jsx'
@@ -50,6 +51,7 @@ ConfGet("app").then((result) => {
 });
 
 const router = createHashRouter([
+ {path:"/writing",element:<WritingLibrary/>},
   {
     path: "/",
     element: <Home />,

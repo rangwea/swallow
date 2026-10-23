@@ -244,7 +244,7 @@ func (h *_hugo) WriteArticle(aid string, meta Meta, content string) error {
 		articleF = path.Join(adir, "index.md")
 	}
 
-	err = os.WriteFile(articleF, []byte(content), os.ModePerm)
+	err = writeSiteConfig(articleF, []byte(content))
 	if err != nil {
 		slog.Error("write article fail", err)
 		return err

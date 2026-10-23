@@ -11,7 +11,7 @@ const Preview = memo(function Preview({ source }) {
   </Suspense>;
 });
 
-const MarkdownBody = forwardRef(function MarkdownBody({ mode, disabled, onDirty, onImage }, ref) {
+const MarkdownBody = forwardRef(function MarkdownBody({ mode, disabled, onDirty, onImage, onComposition }, ref) {
   const textarea = useRef(null);
   const timer = useRef(null);
   const composing = useRef(false);
@@ -77,8 +77,8 @@ const MarkdownBody = forwardRef(function MarkdownBody({ mode, disabled, onDirty,
       disabled={disabled} aria-label={t("editorEdit")} placeholder={t("contentPlaceholder")}
       spellCheck={false} autoCapitalize="off" autoCorrect="off"
       onChange={() => { onDirty(); schedulePreview(); }}
-      onCompositionStart={() => { composing.current = true; clearTimeout(timer.current); }}
-      onCompositionEnd={() => { composing.current = false; schedulePreview(); }}
+      onCompositionStart={() => { composing.current = true; onComposition?.(true); clearTimeout(timer.current); }}
+      onCompositionEnd={() => { composing.current = false; onComposition?.(false); schedulePreview(); }}
       onPaste={(event) => transferImage(event, event.clipboardData)}
       onDragOver={(event) => { if (event.dataTransfer.types.includes("Files")) event.preventDefault(); }}
       onDrop={(event) => {

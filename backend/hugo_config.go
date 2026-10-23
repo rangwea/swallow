@@ -25,6 +25,10 @@ func writeSiteConfig(filename string, data []byte) error {
 		file.Close()
 		return err
 	}
+	if err := file.Sync(); err != nil {
+		file.Close()
+		return err
+	}
 	if err := file.Close(); err != nil {
 		return err
 	}

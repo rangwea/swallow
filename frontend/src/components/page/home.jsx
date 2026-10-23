@@ -16,13 +16,17 @@ import {
   SitePreview,
   SiteDeploy,
   ConfGet,
+ DraftList,
 } from "/wailsjs/go/backend/App";
 import { isSuccess, checkError, checkResult } from "@/components/page/util";
+import { wt } from "@/lib/writing-text";
 import { t } from "@/lib/i18n";
 import { toggleFromWindowHeader } from "@/components/layout/window-header";
 import ToolButton from "@/components/layout/tool-button";
 
 function Home() {
+ const [draftCount,setDraftCount]=useState(0);
+ useEffect(()=>{DraftList().then(r=>{if(r.code===1)setDraftCount((r.data||[]).length);}).catch(()=>{});},[]);
   const [articles, setArticles] = useState([]);
   const [checked, setChecked] = useState([]);
   const [deleteBtnShow, setDeleteBtnShow] = useState(false);
@@ -47,14 +51,16 @@ function Home() {
 
   function enterSearch(e) {
     if (e.key === "Enter") {
-      doSearch();
+      doSearch(0);
     }
   }
 
-  function doSearch() {
-    ArticleList(search, page).then((r) => {
+  function doSearch(targetPage=page) {
+    ArticleList(search, targetPage).then((r) => {
       if (isSuccess(r)) {
         setTotal(r.data.total);
+ setArticlesPerPage(r.data.pageSize);
+ setPage(r.data.page);
         setArticles(r.data.list);
       }
     });
@@ -67,7 +73,7 @@ function Home() {
   function loadAppearanceSettings() {
     ConfGet("app").then((result) => {
       if (isSuccess(result) && result.data) {
-        setArticlesPerPage(result.data.articlesPerPage || 10);
+
         setShowArticlesStats(
           result.data.showArticlesStats !== undefined
             ? result.data.showArticlesStats
@@ -93,7 +99,8 @@ function Home() {
     if (checked.length > 0) {
       ArticleRemove(checked).then((r) => {
         if (isSuccess(r)) {
-          toast.info(`removed ${checked.length} articles`, 2);
+          const failed=(r.data||[]).filter(item=>!item.ok);
+ if(failed.length)toast.error(failed.map(item=>item.error).join("; "));else toast.success(wt("deleteResult"));
           doSearch();
           setChecked([]);
           setDeleteBtnShow(false);
@@ -128,7 +135,7 @@ function Home() {
   function calPage() {
     return Math.max(0, Math.ceil(total / articlesPerPage) - 1);
   }
-  
+
   return (
     <>
       <div className="home-shell flex flex-col h-screen overflow-hidden">
@@ -143,20 +150,22 @@ function Home() {
             <Input aria-label={t("searchPlaceholder")} placeholder={t("searchPlaceholder")}
               value={search} onKeyDown={enterSearch}
               onChange={(event) => setSearch(event.target.value)} />
-            <ToolButton className="home-search-button" icon="Search" label={t("searchPlaceholder")} onClick={doSearch} />
+            <ToolButton className="home-search-button" icon="Search" label={t("searchPlaceholder")} onClick={()=>doSearch(0)} />
           </div>
           <ToolButton ref={searchToggleRef} className="home-search-toggle home-action-button" icon="Search"
             label={t("searchPlaceholder")} aria-controls="home-search-field" aria-expanded={searchOpen}
             onClick={() => setSearchOpen((open) => !open)} />
           <div className="home-header-actions" role="group" aria-label={t("homeActions")}>
             {deleteBtnShow && <ToolButton className="home-action-button home-action-delete" icon="Trash2" label={t("deleteSelected")} onClick={removeArticle} />}
-            <Link to="/editor"><ToolButton className="home-action-button home-action-primary" icon="SquarePlus" label={t("newArticle")} /></Link>
+            <Link to="/writing"><ToolButton className="home-action-button" icon="ArchiveRestore" label={`${wt("newDrafts")}${draftCount?` (${draftCount})`:""}`} /></Link>
+ <Link to="/editor"><ToolButton className="home-action-button home-action-primary" icon="SquarePlus" label={t("newArticle")} /></Link>
             <ToolButton className="home-action-button" icon="View" label={t("preview")} onClick={preview} />
             <ToolButton className="home-action-button" icon="Rocket" label={t("deploy")} onClick={deploy} />
             <Link to="/settings"><ToolButton className="home-action-button" icon="Settings" label={t("settings")} /></Link>
           </div>
         </header>
         <div className="home-content flex-1 min-h-0 overflow-auto px-8 py-6">
+          {draftCount>0&&<Link to="/writing" className="inline-flex mb-3 text-xs text-muted-foreground hover:text-foreground">{draftCount} {wt("draftCount")} →</Link>}
           {/* Stats Bar - conditionally rendered */}
           {showArticlesStats && (
             <div className="home-article-stats">

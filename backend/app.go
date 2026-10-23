@@ -9,7 +9,6 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rangwea/swallows/backend/util"
@@ -81,6 +80,9 @@ func initialize() {
 	// component init
 	Conf.Initialize()
 	Hugo.Initialize()
+	if err := recoverWriting(); err != nil {
+		panic(fmt.Errorf("recover writing operation: %w", err))
+	}
 
 	Log.Info("Application initialized successfully")
 }
@@ -165,60 +167,61 @@ func (a *App) SiteDeploy() *R {
 }
 
 func (a *App) ArticleList(search string, page int) *R {
-	where := ""
-	if search != "" {
-		where += " where title like ? or tags like ?"
-		search = "%" + search + "%"
-	}
-
-	offset := page * 10
-	countSql := "select count(id) from t_article " + where
-	pageSql := "select * from t_article " + where + " order by update_time desc limit 10 offset " + strconv.Itoa(offset)
-
-	r := make(map[string]interface{})
-	count := 0
-	l := []Article{}
-	r["total"] = &count
-	r["list"] = &l
-
-	DB.Get(&count, countSql, search, search)
-
-	if count == 0 {
-		return success(r)
-	}
-
-	err := DB.Select(&l, pageSql, search, search)
+	writingMu.Lock()
+	defer writingMu.Unlock()
+	conf, err := getAppConf()
 	if err != nil {
 		return fail(err)
 	}
-
-	return success(r)
+	size := 10
+	if conf != nil && conf.ArticlesPerPage > 0 {
+		size = conf.ArticlesPerPage
+	}
+	if size > 100 {
+		size = 100
+	}
+	where := ""
+	args := []interface{}{}
+	if search != "" {
+		where = " where title like ? or tags like ?"
+		args = append(args, "%"+search+"%", "%"+search+"%")
+	}
+	count := 0
+	if err := DB.Get(&count, "select count(id) from t_article"+where, args...); err != nil {
+		return fail(err)
+	}
+	last := 0
+	if count > 0 {
+		last = (count - 1) / size
+	}
+	if page < 0 {
+		page = 0
+	}
+	if page > last {
+		page = last
+	}
+	list := []Article{}
+	args = append(args, size, page*size)
+	if err := DB.Select(&list, "select * from t_article"+where+" order by update_time desc limit ? offset ?", args...); err != nil {
+		return fail(err)
+	}
+	return success(map[string]interface{}{"total": count, "list": list, "page": page, "pageSize": size})
 }
 
 func (a *App) ArticleSave(aid string, meta Meta, content string) *R {
-	n := time.Now().Format("2006-01-02 15:04:05")
-	meta.Lastmod = n
-	if meta.Date == "" {
-		meta.Date = n
-	}
-
-	if aid != AboutAid {
-		// common article need save db
-		err := saveArticleToDB(&aid, meta)
-		if err != nil {
-			return fail(err)
-		}
-	}
-
-	err := Hugo.WriteArticle(aid, meta, content)
+	id, err := saveProtectedArticle(aid, meta, content)
 	if err != nil {
 		return fail(err)
 	}
-
-	return success(aid)
+	return success(id)
 }
 
 func (a *App) ArticleGet(aid string) *R {
+	writingMu.Lock()
+	defer writingMu.Unlock()
+	if !validArticle(aid) {
+		return fail(errors.New("invalid article ID"))
+	}
 	meta, content, err := Hugo.ReadArticle(aid)
 	if err != nil {
 		return fail(err)
@@ -226,24 +229,24 @@ func (a *App) ArticleGet(aid string) *R {
 	data := map[string]interface{}{
 		"meta":    meta,
 		"content": content,
+		"hash":    articleHash(aid),
 	}
 	return success(data)
 }
 
 func (a *App) ArticleRemove(aids []string) *R {
-	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(aids)), ",")
-	args := make([]interface{}, len(aids))
-	for i, aid := range aids {
-		args[i] = aid
+	writingMu.Lock()
+	defer writingMu.Unlock()
+	results := []map[string]interface{}{}
+	for _, id := range aids {
+		err := trashArticle(id)
+		message := ""
+		if err != nil {
+			message = err.Error()
+		}
+		results = append(results, map[string]interface{}{"id": id, "ok": err == nil, "error": message})
 	}
-	_, err := DB.Exec(fmt.Sprintf("delete from t_article where id in(%s)", placeholders), args...)
-	if err != nil {
-		return fail(err)
-	}
-	for _, aid := range aids {
-		Hugo.DeleteArticle(aid)
-	}
-	return success(nil)
+	return success(results)
 }
 
 func (a *App) ArticleInsertImage(aid string) *R {
