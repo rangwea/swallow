@@ -56,6 +56,12 @@ The release workflow packages Windows and macOS builds. Linux can be built from 
 
 The screenshots below use the v1.5.0 frontend with isolated demonstration data. The release screen shows a review state; no website was deployed to create these images.
 
+### Article library
+
+Browse articles, search by title or tag, and see publication status at a glance.
+
+![Article library with search and publication status](./doc/images/home-v1.5.png)
+
 ### Markdown editor
 
 Edit and preview side by side, with a compact toolbar and rich insertion tools.
@@ -67,6 +73,18 @@ Edit and preview side by side, with a compact toolbar and rich insertion tools.
 Review a frozen snapshot and its changes before publishing the entire site. History is available in an on-demand drawer.
 
 ![Publishing center release review](./doc/images/publishing-v1.5.png)
+
+### Appearance settings
+
+Choose the interface language and app theme, with preferences saved automatically.
+
+![Appearance settings with language and theme options](./doc/images/appearance-v1.5.png)
+
+### Deployment settings
+
+Configure GitHub, COS, OSS or Netlify. This example uses fictional values and contains no credentials.
+
+![GitHub deployment configuration](./doc/images/deployment-v1.5.png)
 
 ## Development
 
