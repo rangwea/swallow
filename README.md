@@ -9,8 +9,8 @@ A cool static blog client.
 </p>
 
 <p align="center">
-  <a href="https://github.com/rangwea/swallow-wails/blob/main/LICENSE">
-    <img alt="GitHub" src="https://img.shields.io/github/license/rangwea/swallow-wails"/>
+  <a href="https://github.com/rangwea/swallow/blob/main/LICENSE">
+    <img alt="GitHub" src="https://img.shields.io/github/license/rangwea/swallow"/>
   </a>
   <a href="https://fjwoo.cn">
     <img alt="For" src="https://img.shields.io/badge/developer-Andy-228B22"/>
@@ -35,45 +35,64 @@ A cool static blog client.
 
 ## About
 
-Swallow is a simple gui desktop application for Hugo, so it is also a cool static blog client.
+Swallow is a local-first desktop writing and publishing app for Hugo, built with Go, Wails and React. Write in Markdown, keep drafts separate from published articles, preview your site locally, and review an entire-site release before uploading it.
 
-Swallow was being developed with Go using Wails. 
+[Download releases](https://github.com/rangwea/swallow/releases) · [Build workflow](https://github.com/rangwea/swallow/actions/workflows/build.yml)
 
-## Feature
+## Features
 
-- Simple article list management, you can search articles by titles and tags.
-- Simple and cool Markdown editor, syntax highlighting, tags settings, Markdown preview, copy to insert pictures, drag and drop to insert pictures and file selector to insert pictures.
-- Full platform support for Windows, MacOS and Linux.
-- Preview site on local.
-- Remote deployment to Github.
-- [Hugo Theme](https://themes.gohugo.io/)，choose the look you like. Multiple built-in themes.
+- **Markdown workspace:** edit, split and preview modes, syntax highlighting, tables, selection-to-link insertion, HTML text colors, and pasted or dropped images. Dock the floating editor toolbar on any edge.
+- **Writing protection:** autosave to independent local drafts; save formal articles manually. Recover drafts after interruption and restore deleted articles from Trash. Local drafts are excluded from website publishing.
+- **Article library:** compact article list, title and tag search, pagination, and publication status for the selected target.
+- **Hugo preview:** preview the complete site locally and use bundled or compatible Hugo themes.
+- **Publishing center:** prepare a frozen snapshot, review article and resource changes, then explicitly publish the entire site. Follow background progress and browse release history.
+- **Failure recovery:** retry the original snapshot, verify uncertain remote results, and stop running tasks with an exit guard. Each target keeps its own successful publication baseline.
+- **Deployment targets:** GitHub, Netlify, Tencent COS and Alibaba OSS. Object storage cleanup is limited to previously managed files.
+- **Appearance:** multiple app themes, including pure white and neutral gray, with automatically saved preferences and English / Simplified Chinese interfaces.
 
-![](./doc/images/1.png)
-![](./doc/images/2.png)
-![](./doc/images/3.png)
+The release workflow packages Windows and macOS builds. Linux can be built from source with the Wails platform prerequisites installed.
 
-## Roadmap
+## Screenshots
 
-- Picture Bed
-- More remote deployment methods
+The screenshots below use the v1.5.0 frontend with isolated demonstration data. The release screen shows a review state; no website was deployed to create these images.
 
-## Deveplop
+### Markdown editor
 
-If you also love programming, you are welcome to contribute code.
+Edit and preview side by side, with a compact toolbar and rich insertion tools.
 
-#### Enviroment
+![Markdown editor with split preview](./doc/images/editor-v1.5.png)
 
-- [GO](https://go.dev/doc/install)
-- [Node](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)
-- [Wails](https://wails.io/docs/next/gettingstarted/installation)
+### Publishing center
 
-> As Swallow is mainly developed based on the Wails framework, the environment can be installed following the [installation tutorial of Wails](https://wails.io/docs/next/gettingstarted/installation), which includes the installation of Go and NPM.
+Review a frozen snapshot and its changes before publishing the entire site. History is available in an on-demand drawer.
 
-```
-git clone git@github.com:rangwea/swallow-wails.git
-cd swallow-wails
+![Publishing center release review](./doc/images/publishing-v1.5.png)
+
+## Development
+
+### Requirements
+
+- Go 1.27 or newer, matching `go.mod`.
+- Node.js and npm (CI uses Node.js 20).
+- Wails CLI v2.16.0 and the [platform prerequisites](https://wails.io/docs/gettingstarted/installation).
+- A C compiler / CGO for extended Hugo and bundled theme support.
+
+```sh
+git clone --recurse-submodules https://github.com/rangwea/swallow.git
+cd swallow
+cd frontend
+npm install
+cd ..
 wails dev -tags extended
 ```
+
+Build a desktop application:
+
+```sh
+wails build -tags extended
+```
+
+The project configuration also enables the `extended` build tag. See [writing protection](docs/writing-protection.md) and [publishing center](docs/publishing-center.md) for storage and recovery details.
 
 ## Story
 
